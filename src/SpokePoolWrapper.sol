@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.29;
 
 import {V3SpokePoolInterface, V3SpokePoolInterfaceExtended} from "./interfaces/across/V3SpokePoolInterface.sol";
 import {ERC20Upgradeable} from "openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -140,9 +140,6 @@ contract SpokePoolWrapper is PlugBase {
 
     /**
      * @notice Forwards the deposit to the Across SpokePool contract
-     * @dev Helper function to reduce stack depth in the main deposit function
-     * @param params The deposit parameters to forward
-     * @param value The ETH value to forward with the deposit
      */
     function _forwardDeposit(FundsDepositedParams memory params, uint256 value) internal {
         V3SpokePoolInterface(spokePool).deposit{value: value}(
