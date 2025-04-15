@@ -9,21 +9,19 @@ contract SolverAppGateway is AppGatewayBase {
     V3SpokePoolInterface spokePoolArbitrum;
     V3SpokePoolInterface spokePoolBase;
 
-    uint32 public constant OP_SEPOLIA_CHAIN_ID = 11155420;
+    uint32 public constant ARBITRUM_SEPOLIA_CHAIN_ID = 421614;
     uint32 public constant BASE_SEPOLIA_CHAIN_ID = 84532;
-
-    address public constant OP_SEPOLIA_SPOKE_POOL = 0x6f26Bf09B1C792e3228e5467807a900A503c0281;
-    address public constant BASE_SEPOLIA_SPOKE_POOL = 0x82B564983aE7274c86695917BBf8C99ECb6F0F8F;
-
+    address public constant WETH_ARBITRUM = 0x980B62Da83eFf3D4576C647993b0c1D7faf17c73;
+    address public constant WETH_BASE = 0x4200000000000000000000000000000000000006;
     bytes32 public spokePoolWrapper = _createContractId("spokePoolWrapper");
 
-    constructor(address addressResolver_, Fees memory fees_, address spokePoolArbitrum, address spokePoolBase)
+    constructor(address addressResolver_, Fees memory fees_, address spokePoolArbitrum_, address spokePoolBase_)
         AppGatewayBase(addressResolver_)
     {
         creationCodeWithArgs[spokePoolWrapper] = abi.encodePacked(type(SpokePoolWrapper).creationCode);
         _setOverrides(fees_);
-        spokePoolArbitrum = spokePoolArbitrum;
-        spokePoolBase = spokePoolBase;
+        spokePoolArbitrum = V3SpokePoolInterface(spokePoolArbitrum_);
+        spokePoolBase = V3SpokePoolInterface(spokePoolBase_);
     }
 
     /**
@@ -44,11 +42,10 @@ contract SolverAppGateway is AppGatewayBase {
         address onchainAddress = getOnChainAddress(spokePoolWrapper, chainSlug_);
         address spokePool;
         if (chainSlug_ == BASE_SEPOLIA_CHAIN_ID) {
-            spokePool = BASE_SEPOLIA_SPOKE_POOL;
+            SpokePoolWrapper(onchainAddress).setSpokePool(address(spokePoolBase));
         } else {
-            spokePool = OP_SEPOLIA_SPOKE_POOL;
+            SpokePoolWrapper(onchainAddress).setSpokePool(address(spokePoolArbitrum));
         }
-        SpokePoolWrapper(onchainAddress).setSpokePool(spokePool);
     }
 
     struct FundsDepositedParams {
@@ -73,18 +70,40 @@ contract SolverAppGateway is AppGatewayBase {
      * @param payload_ The encoded message contains all the relevant information to fill the intent.
      *        It contains identical data to the Across SpokePool emitted events to solvers
      */
-    function callFromChain(uint32, address, bytes32, bytes calldata payload_)
+    function callFromChain(uint32 chainSlug_, address, bytes32, bytes calldata payload_)
         external
         override
         async
         onlyWatcherPrecompile
     {
         FundsDepositedParams memory params = abi.decode(payload_, (FundsDepositedParams));
+        if (
+            uint32(uint256(params.destinationChainId)) == ARBITRUM_SEPOLIA_CHAIN_ID && toAddressUnchecked(params.outputToken) == WETH_ARBITRUM
+                && toAddressUnchecked(params.inputToken) == WETH_BASE && chainSlug_ == BASE_SEPOLIA_CHAIN_ID
+        ) {
+            V3SpokePoolInterface.V3RelayData memory relayData = V3SpokePoolInterface.V3RelayData({
+                depositor: params.depositor,
+                recipient: params.recipient,
+                exclusiveRelayer: params.exclusiveRelayer,
+                inputToken: params.inputToken,
+                outputToken: params.outputToken,
+                inputAmount: params.inputAmount,
+                outputAmount: params.outputAmount,
+                originChainId: chainSlug_,
+                depositId: params.acrossDepositId,
+                fillDeadline: params.fillDeadline,
+                exclusivityDeadline: params.exclusivityDeadline,
+                message: params.message
+            });
+            spokePoolArbitrum.fillRelay(relayData, uint256(chainSlug_), bytes32(0));
+        }
     }
 
+   
     /**
      * @notice Updates the fee configuration
      * @dev Allows modification of fee settings for onchain operations
+     *  /**
      * @param fees_ New fee configuration
      */
     function setFees(Fees memory fees_) public {
@@ -102,4 +121,9 @@ contract SolverAppGateway is AppGatewayBase {
     function withdrawFeeTokens(uint32 chainSlug_, address token_, uint256 amount_, address receiver_) external {
         _withdrawFeeTokens(chainSlug_, token_, amount_, receiver_);
     }
+
+    function toAddressUnchecked(bytes32 _bytes32) internal pure returns (address) {
+        return address(uint160(uint256(_bytes32)));
+    }
+
 }

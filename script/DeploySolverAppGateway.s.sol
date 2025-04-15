@@ -19,7 +19,7 @@ contract SolverAppGatewayDeploy is Script {
 
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-        Fees memory fees = Fees({feePoolChain: 421614, feePoolToken: ETH_ADDRESS, amount: 0.1 ether});
+        Fees memory fees = Fees({feePoolChain: 421614, feePoolToken: ETH_ADDRESS, amount: 0.01 ether});
 
         SolverAppGateway appGateway = new SolverAppGateway(addressResolver, fees, spokePoolArbitrum, spokePoolBase);
 
