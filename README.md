@@ -71,8 +71,9 @@ $ cast --help
 
 
 forge script script/DeploySolverAppGateway.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir
-forge script script/SetFeeConfigs.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir
 
-forge script script/PayFeesInBaseETH.s.sol --broadcast --skip-simulation --via-ir 
+forge script script/PayFeesInArbitrumETH.s.sol --broadcast --skip-simulation --via-ir 
+ forge script script/CheckFeesBalance.s.sol --broadcast --skip-simulation --via-ir 
 
 forge script script/DeploySpokePoolWrapper.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir
+forge script script/DeployWETHVaults.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir

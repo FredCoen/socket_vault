@@ -135,7 +135,6 @@ contract SpokePoolWrapper is PlugBase {
 
         _callAppGateway(abi.encode(params), bytes32(0));
         _forwardDeposit(params, msg.value);
-        ERC20Upgradeable(inputToken.toAddress()).transferFrom(msg.sender, address(this), inputAmount);
     }
 
     /**

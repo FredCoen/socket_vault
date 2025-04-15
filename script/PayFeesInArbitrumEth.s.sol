@@ -4,13 +4,11 @@ pragma solidity ^0.8.29;
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
 import {FeesPlug} from "socket-protocol/protocol/payload-delivery/FeesPlug.sol";
-import {FeesManager} from "socket-protocol/protocol/payload-delivery/FeesManager.sol";
-
 import {ETH_ADDRESS} from "socket-protocol/protocol/utils/common/Constants.sol";
 
 contract DepositFees is Script {
     function run() external {
-        vm.createSelectFork(vm.envString("ARBITRUM_SEPOLIA_RPC"));
+        vm.createSelectFork(vm.envString("421614_RPC"));
 
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);

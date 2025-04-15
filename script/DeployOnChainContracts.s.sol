@@ -18,7 +18,9 @@ contract SpokePoolWrapperDeploy is Script {
 
         SolverAppGateway appGateway = SolverAppGateway(vm.envAddress("APP_GATEWAY"));
 
-        console.log("Deploying SpokePoolWrapper on Base Sepolia...");
+        console.log("Deploying contracts on Base Sepolia");
         appGateway.deployContracts(84532);
+        console.log("Deploying Contracts on Arbitrum Sepolia.");
+        appGateway.deployContracts(421614);
     }
 }

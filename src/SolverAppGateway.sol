@@ -4,6 +4,9 @@ pragma solidity ^0.8.29;
 import "socket-protocol/base/AppGatewayBase.sol";
 import {V3SpokePoolInterface} from "./interfaces/across/V3SpokePoolInterface.sol";
 import "./SpokePoolWrapper.sol";
+import {WETHVault} from "./Vault.sol";
+import "openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 
 contract SolverAppGateway is AppGatewayBase {
     V3SpokePoolInterface spokePoolArbitrum;
@@ -13,24 +16,26 @@ contract SolverAppGateway is AppGatewayBase {
     uint32 public constant BASE_SEPOLIA_CHAIN_ID = 84532;
     address public constant WETH_ARBITRUM = 0x980B62Da83eFf3D4576C647993b0c1D7faf17c73;
     address public constant WETH_BASE = 0x4200000000000000000000000000000000000006;
-    bytes32 public spokePoolWrapper = _createContractId("spokePoolWrapper");
+    bytes32 public spokePoolWrapper = _createContractId("SpokePoolWrapper");
+    bytes32 public wethVault = _createContractId("WETHVault");
 
     constructor(address addressResolver_, Fees memory fees_, address spokePoolArbitrum_, address spokePoolBase_)
         AppGatewayBase(addressResolver_)
     {
         creationCodeWithArgs[spokePoolWrapper] = abi.encodePacked(type(SpokePoolWrapper).creationCode);
+        creationCodeWithArgs[wethVault] = abi.encodePacked(type(WETHVault).creationCode,  abi.encode(
+                IERC20 (WETH_ARBITRUM),
+            "Vault Arbitrum WETH",
+            "VAULT_ARBITRUM_WETH"
+            ));
         _setOverrides(fees_);
         spokePoolArbitrum = V3SpokePoolInterface(spokePoolArbitrum_);
         spokePoolBase = V3SpokePoolInterface(spokePoolBase_);
     }
 
-    /**
-     * @notice Deploys OnchainTrigger contracts to a specified chain
-     * @dev Triggers an asynchronous multi-chain deployment via SOCKET Protocol
-     * @param chainSlug_ The identifier of the target chain
-     */
     function deployContracts(uint32 chainSlug_) external async {
         _deploy(spokePoolWrapper, chainSlug_, IsPlug.YES);
+        _deploy(wethVault, chainSlug_, IsPlug.YES);
     }
 
     /**
@@ -39,12 +44,14 @@ contract SolverAppGateway is AppGatewayBase {
      * @param chainSlug_ The identifier of the chain where the contract was deployed
      */
     function initialize(uint32 chainSlug_) public override {
-        address onchainAddress = getOnChainAddress(spokePoolWrapper, chainSlug_);
-        address spokePool;
+        address spokePoolWrapperOnChainAddress = getOnChainAddress(spokePoolWrapper, chainSlug_);
+        address wethVaultOnChainAddress = getOnChainAddress(wethVault, chainSlug_);
         if (chainSlug_ == BASE_SEPOLIA_CHAIN_ID) {
-            SpokePoolWrapper(onchainAddress).setSpokePool(address(spokePoolBase));
+            SpokePoolWrapper(spokePoolWrapperOnChainAddress).setSpokePool(address(spokePoolBase));
+            WETHVault(wethVaultOnChainAddress).setSpokePool(address(spokePoolBase));
         } else {
-            SpokePoolWrapper(onchainAddress).setSpokePool(address(spokePoolArbitrum));
+            SpokePoolWrapper(spokePoolWrapperOnChainAddress).setSpokePool(address(spokePoolArbitrum));
+            WETHVault(wethVaultOnChainAddress).setSpokePool(address(spokePoolArbitrum));
         }
     }
 

@@ -15,9 +15,11 @@ contract WETHVault is ERC4626, PlugBase {
     constructor(
         IERC20 _weth,
         string memory _name,
-        string memory _symbol,
-        address _spokePool
+        string memory _symbol
     ) ERC4626(_weth) ERC20(_name, _symbol) {
+    }
+
+    function setSpokePool(address _spokePool) external {
         spokePool = V3SpokePoolInterface(_spokePool);
     }
     
