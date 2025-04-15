@@ -11,8 +11,8 @@ import {SolverAppGateway} from "../src/SolverAppGateway.sol";
 contract SolverAppGatewayDeploy is Script {
     function run() external {
         address addressResolver = vm.envAddress("ADDRESS_RESOLVER");
-        address spokePoolArbitrum = vm.envAddress("SPOKE_POOL_ARBITRUM");
-        address spokePoolBase = vm.envAddress("SPOKE_POOL_BASE");
+        address spokePoolArbitrum = vm.envAddress("SPOKE_POOL_421614");
+        address spokePoolBase = vm.envAddress("SPOKE_POOL_84532");
 
         string memory rpc = vm.envString("EVMX_RPC");
         vm.createSelectFork(rpc);

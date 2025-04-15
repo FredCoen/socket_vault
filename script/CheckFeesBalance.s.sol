@@ -19,9 +19,6 @@ contract CheckFeesBalance is Script {
         FeesManager feesManager = FeesManager(payable(vm.envAddress("FEES_MANAGER")));
 
         uint256 availableFeesArbitrum = feesManager.getAvailableFees(421614, appGateway, ETH_ADDRESS);
-        uint256 availableFeesBase = feesManager.getAvailableFees(84532, appGateway, ETH_ADDRESS);
-        console.log("Fees available to be spent on transactions: %s", availableFeesArbitrum + availableFeesBase);
         console.log("Fees available Arbitrum fees plug: %s", availableFeesArbitrum);
-        console.log("Fees available Base fees plug: %s", availableFeesBase);
     }
 }

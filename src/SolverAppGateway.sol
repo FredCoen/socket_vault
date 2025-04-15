@@ -7,7 +7,6 @@ import "./SpokePoolWrapper.sol";
 import {WETHVault} from "./Vault.sol";
 import "openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-
 contract SolverAppGateway is AppGatewayBase {
     V3SpokePoolInterface spokePoolArbitrum;
     V3SpokePoolInterface spokePoolBase;
@@ -23,11 +22,10 @@ contract SolverAppGateway is AppGatewayBase {
         AppGatewayBase(addressResolver_)
     {
         creationCodeWithArgs[spokePoolWrapper] = abi.encodePacked(type(SpokePoolWrapper).creationCode);
-        creationCodeWithArgs[wethVault] = abi.encodePacked(type(WETHVault).creationCode,  abi.encode(
-                IERC20 (WETH_ARBITRUM),
-            "Vault Arbitrum WETH",
-            "VAULT_ARBITRUM_WETH"
-            ));
+        creationCodeWithArgs[wethVault] = abi.encodePacked(
+            type(WETHVault).creationCode,
+            abi.encode(IERC20(WETH_ARBITRUM), "Vault Arbitrum WETH", "VAULT_ARBITRUM_WETH")
+        );
         _setOverrides(fees_);
         spokePoolArbitrum = V3SpokePoolInterface(spokePoolArbitrum_);
         spokePoolBase = V3SpokePoolInterface(spokePoolBase_);
@@ -85,7 +83,8 @@ contract SolverAppGateway is AppGatewayBase {
     {
         FundsDepositedParams memory params = abi.decode(payload_, (FundsDepositedParams));
         if (
-            uint32(uint256(params.destinationChainId)) == ARBITRUM_SEPOLIA_CHAIN_ID && toAddressUnchecked(params.outputToken) == WETH_ARBITRUM
+            uint32(uint256(params.destinationChainId)) == ARBITRUM_SEPOLIA_CHAIN_ID
+                && toAddressUnchecked(params.outputToken) == WETH_ARBITRUM
                 && toAddressUnchecked(params.inputToken) == WETH_BASE && chainSlug_ == BASE_SEPOLIA_CHAIN_ID
         ) {
             V3SpokePoolInterface.V3RelayData memory relayData = V3SpokePoolInterface.V3RelayData({
@@ -106,7 +105,6 @@ contract SolverAppGateway is AppGatewayBase {
         }
     }
 
-   
     /**
      * @notice Updates the fee configuration
      * @dev Allows modification of fee settings for onchain operations
@@ -132,5 +130,4 @@ contract SolverAppGateway is AppGatewayBase {
     function toAddressUnchecked(bytes32 _bytes32) internal pure returns (address) {
         return address(uint160(uint256(_bytes32)));
     }
-
 }

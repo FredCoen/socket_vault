@@ -8,7 +8,7 @@ import {ETH_ADDRESS} from "socket-protocol/protocol/utils/common/Constants.sol";
 
 contract DepositFees is Script {
     function run() external {
-        vm.createSelectFork(vm.envString("421614_RPC"));
+        vm.createSelectFork(vm.envString("RPC_421614"));
 
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
