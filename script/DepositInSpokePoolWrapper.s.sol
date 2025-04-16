@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.29;
+pragma solidity ^0.8.0;
 
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
@@ -27,7 +27,10 @@ contract DepositInSpokePoolWrapper is Script {
     }
 
     function run(uint256 sourceChainId, uint256 destinationChainId) external {
-        string memory rpcEnvVar = string.concat("RPC_", sourceChainId.toString());
+        string memory rpcEnvVar = string.concat(
+            "RPC_",
+            sourceChainId.toString()
+        );
         string memory rpc = vm.envString(rpcEnvVar);
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
 
@@ -36,33 +39,52 @@ contract DepositInSpokePoolWrapper is Script {
 
         // Get contract address from env var
         address spokePoolWrapperAddress = vm.envAddress("SPOKE_POOL_WRAPPER");
-        SpokePoolWrapper spokePoolWrapper = SpokePoolWrapper(spokePoolWrapperAddress);
+        SpokePoolWrapper spokePoolWrapper = SpokePoolWrapper(
+            spokePoolWrapperAddress
+        );
 
         // Check if WETH addresses are available for the specified chains
         require(
             wethAddresses[sourceChainId] != address(0),
-            string.concat("WETH address not configured for source chain ID: ", sourceChainId.toString())
+            string.concat(
+                "WETH address not configured for source chain ID: ",
+                sourceChainId.toString()
+            )
         );
         require(
             wethAddresses[destinationChainId] != address(0),
-            string.concat("WETH address not configured for destination chain ID: ", destinationChainId.toString())
+            string.concat(
+                "WETH address not configured for destination chain ID: ",
+                destinationChainId.toString()
+            )
         );
 
         // Deposit parameters
         address depositor = vm.addr(privateKey);
         bytes32 depositorBytes32 = bytes32(uint256(uint160(depositor)));
         bytes32 recipientBytes32 = depositorBytes32;
-        bytes32 inputTokenBytes32 = bytes32(uint256(uint160(wethAddresses[sourceChainId])));
-        bytes32 outputTokenBytes32 = bytes32(uint256(uint160(wethAddresses[destinationChainId])));
+        bytes32 inputTokenBytes32 = bytes32(
+            uint256(uint160(wethAddresses[sourceChainId]))
+        );
+        bytes32 outputTokenBytes32 = bytes32(
+            uint256(uint160(wethAddresses[destinationChainId]))
+        );
         uint256 inputAmount = 0.02 ether;
         uint256 outputAmount = 0.01 ether;
-        bytes32 exclusiveRelayerBytes32 = bytes32(uint256(uint160(exclusiveRelayers[sourceChainId])));
+        bytes32 exclusiveRelayerBytes32 = bytes32(
+            uint256(uint160(exclusiveRelayers[sourceChainId]))
+        );
         uint32 quoteTimestamp = uint32(block.timestamp);
         uint32 fillDeadline = uint32(block.timestamp) + 15 minutes;
         uint32 exclusivityParameter = uint32(block.timestamp) + 15 minutes;
         bytes memory message = "";
 
-        console.log("Depositing %s WETH from chain %s to chain %s", inputAmount, sourceChainId, destinationChainId);
+        console.log(
+            "Depositing %s WETH from chain %s to chain %s",
+            inputAmount,
+            sourceChainId,
+            destinationChainId
+        );
 
         spokePoolWrapper.deposit{value: inputAmount}(
             depositorBytes32,
