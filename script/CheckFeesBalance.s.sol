@@ -1,5 +1,5 @@
-    // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.29;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
@@ -16,9 +16,18 @@ contract CheckFeesBalance is Script {
         vm.startBroadcast(privateKey);
         address appGateway = vm.envAddress("APP_GATEWAY");
 
-        FeesManager feesManager = FeesManager(payable(vm.envAddress("FEES_MANAGER")));
+        FeesManager feesManager = FeesManager(
+            payable(vm.envAddress("FEES_MANAGER"))
+        );
 
-        uint256 availableFeesArbitrum = feesManager.getAvailableFees(421614, appGateway, ETH_ADDRESS);
-        console.log("Fees available Arbitrum fees plug: %s", availableFeesArbitrum);
+        uint256 availableFeesArbitrum = feesManager.getAvailableFees(
+            421614,
+            appGateway,
+            ETH_ADDRESS
+        );
+        console.log(
+            "Fees available Arbitrum fees plug: %s",
+            availableFeesArbitrum
+        );
     }
 }
