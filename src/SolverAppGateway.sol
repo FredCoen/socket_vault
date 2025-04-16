@@ -3,11 +3,9 @@ pragma solidity ^0.8.0;
 
 import "socket-protocol/base/AppGatewayBase.sol";
 import {V3SpokePoolInterface} from "./interfaces/across/V3SpokePoolInterface.sol";
-
-interface IWETHVault {
-    function setSpokePool(address spokePool_) external;
-}
-
+import "./SpokePoolWrapper.sol";
+import {WETHVault} from "./Vault.sol";
+import {IVault} from "./interfaces/IVault.sol";
 interface ISpokePoolWrapper {
     function setSpokePool(address spokePool_) external;
 }
@@ -86,7 +84,7 @@ contract SolverAppGateway is AppGatewayBase {
                     : address(spokePoolArbitrum)
             );
 
-        IWETHVault(forwarderAddresses[wethVault][chainSlug_]).setSpokePool(
+        IVault(forwarderAddresses[wethVault][chainSlug_]).setSpokePool(
             chainSlug_ == BASE_SEPOLIA_CHAIN_ID
                 ? address(spokePoolBase)
                 : address(spokePoolArbitrum)
@@ -132,26 +130,22 @@ contract SolverAppGateway is AppGatewayBase {
             toAddressUnchecked(params.inputToken) == WETH_BASE &&
             chainSlug_ == BASE_SEPOLIA_CHAIN_ID
         ) {
-            V3SpokePoolInterface.V3RelayData
-                memory relayData = V3SpokePoolInterface.V3RelayData({
-                    depositor: params.depositor,
-                    recipient: params.recipient,
-                    exclusiveRelayer: params.exclusiveRelayer,
-                    inputToken: params.inputToken,
-                    outputToken: params.outputToken,
-                    inputAmount: params.inputAmount,
-                    outputAmount: params.outputAmount,
-                    originChainId: chainSlug_,
-                    depositId: params.acrossDepositId,
-                    fillDeadline: params.fillDeadline,
-                    exclusivityDeadline: params.exclusivityDeadline,
-                    message: params.message
-                });
-            spokePoolArbitrum.fillRelay(
-                relayData,
-                uint256(chainSlug_),
-                bytes32(0)
-            );
+
+            V3SpokePoolInterface.V3RelayData memory relayData = V3SpokePoolInterface.V3RelayData({
+                depositor: params.depositor,
+                recipient: params.recipient,
+                exclusiveRelayer: params.exclusiveRelayer,
+                inputToken: params.inputToken,
+                outputToken: params.outputToken,
+                inputAmount: params.inputAmount,
+                outputAmount: params.outputAmount,
+                originChainId: chainSlug_,
+                depositId: params.acrossDepositId,
+                fillDeadline: params.fillDeadline,
+                exclusivityDeadline: params.exclusivityDeadline,
+                message: params.message
+            });
+            IVault(forwarderAddresses[wethVault][chainSlug_]).executeIntent(relayData);
         }
     }
 

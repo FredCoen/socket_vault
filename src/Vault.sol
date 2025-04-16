@@ -5,8 +5,9 @@ import "openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import "openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "socket-protocol/base/PlugBase.sol";
 import {V3SpokePoolInterface} from "./interfaces/across/V3SpokePoolInterface.sol";
+import {IVault} from "./interfaces/IVault.sol";
 
-contract WETHVault is ERC4626, PlugBase {
+contract WETHVault is IVault, ERC4626, PlugBase {
     V3SpokePoolInterface public spokePool;
     uint256 public timelock;
 

@@ -9,7 +9,7 @@ import {ETH_ADDRESS} from "socket-protocol/protocol/utils/common/Constants.sol";
 // source .env && forge script script/PayFeesInArbitrumEth.s.sol  --broadcast --skip-simulation --legacy --gas-price 0
 contract DepositFees is Script {
     function run() external {
-        vm.createSelectFork(vm.envString("ARBITRUM_SEPOLIA_RPC"));
+        vm.createSelectFork(vm.envString("RPC_421614"));
 
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
