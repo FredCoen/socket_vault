@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.29;
+pragma solidity ^0.8.0;
 
 import {V3SpokePoolInterface, V3SpokePoolInterfaceExtended} from "./interfaces/across/V3SpokePoolInterface.sol";
 import {ERC20Upgradeable} from "openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -66,6 +66,10 @@ contract SpokePoolWrapper is PlugBase {
      */
     mapping(uint256 => FundsDepositedParams[]) public depositsPerBlock;
 
+    constructor(address _spokePool) {
+        spokePool = _spokePool;
+    }
+
     /**
      * @notice Sets the address of the SpokePool contract
      * @dev Can only be called by the Socket contract
@@ -113,7 +117,8 @@ contract SpokePoolWrapper is PlugBase {
             }
             // As a safety measure, prevent caller from inadvertently locking funds during exclusivity period
             //  by forcing them to specify an exclusive relayer.
-            if (exclusiveRelayer == bytes32(0)) revert InvalidExclusiveRelayer();
+            if (exclusiveRelayer == bytes32(0))
+                revert InvalidExclusiveRelayer();
         }
 
         FundsDepositedParams memory params = FundsDepositedParams({
@@ -122,7 +127,8 @@ contract SpokePoolWrapper is PlugBase {
             inputAmount: inputAmount,
             outputAmount: outputAmount,
             destinationChainId: destinationChainId,
-            acrossDepositId: V3SpokePoolInterfaceExtended(spokePool).numberOfDeposits() + 1,
+            acrossDepositId: V3SpokePoolInterfaceExtended(spokePool)
+                .numberOfDeposits() + 1,
             quoteTimestamp: quoteTimestamp,
             fillDeadline: fillDeadline,
             exclusivityDeadline: exclusivityDeadline,
@@ -140,7 +146,10 @@ contract SpokePoolWrapper is PlugBase {
     /**
      * @notice Forwards the deposit to the Across SpokePool contract
      */
-    function _forwardDeposit(FundsDepositedParams memory params, uint256 value) internal {
+    function _forwardDeposit(
+        FundsDepositedParams memory params,
+        uint256 value
+    ) internal {
         V3SpokePoolInterface(spokePool).deposit{value: value}(
             params.depositor,
             params.recipient,
@@ -162,7 +171,9 @@ contract SpokePoolWrapper is PlugBase {
      * @param blockNumber The block number to query
      * @return Array of deposits made during that block
      */
-    function getDepositsAtBlock(uint256 blockNumber) external view returns (FundsDepositedParams[] memory) {
+    function getDepositsAtBlock(
+        uint256 blockNumber
+    ) external view returns (FundsDepositedParams[] memory) {
         return depositsPerBlock[blockNumber];
     }
 
@@ -171,7 +182,9 @@ contract SpokePoolWrapper is PlugBase {
      * @param blockNumber The block number to query
      * @return Number of deposits
      */
-    function getNumberOfDepositsAtBlock(uint256 blockNumber) external view returns (uint256) {
+    function getNumberOfDepositsAtBlock(
+        uint256 blockNumber
+    ) external view returns (uint256) {
         return depositsPerBlock[blockNumber].length;
     }
 }
