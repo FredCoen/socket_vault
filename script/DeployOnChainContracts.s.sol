@@ -7,25 +7,25 @@ import {ETH_ADDRESS} from "socket-protocol/protocol/utils/common/Constants.sol";
 import {SolverAppGateway} from "../src/SolverAppGateway.sol";
 
 contract DeployOnChainContracts is Script {
-    function run() external {
-        console.log("Deploying contracts on Base Sepolia");
+        mapping(uint256 => address) public wethAddresses;
 
+
+        function setUp() public {
+        wethAddresses[421614] = 0x980B62Da83eFf3D4576C647993b0c1D7faf17c73;
+        wethAddresses[84532] = 0x4200000000000000000000000000000000000006; 
+    }
+    function run() external {
         string memory rpc = vm.envString("EVMX_RPC");
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        console.log("Deploying contracts on Base Sepolia");
 
         vm.createSelectFork(rpc);
         vm.startBroadcast(privateKey);
-        console.log("Deploying contracts on Base Sepolia111");
 
-        SolverAppGateway appGateway = SolverAppGateway(
-            vm.envAddress("APP_GATEWAY")
-        );
+        SolverAppGateway appGateway = SolverAppGateway(vm.envAddress("APP_GATEWAY"));
 
-        console.log("Deploying contracts on Base Sepolia11111");
-        appGateway.deployContracts(84532, ETH_ADDRESS, "WETH", "WETH");
+        // appGateway.deployContracts(84532, ETH_ADDRESS, "WETH", "WETH");
         // console.log("Deploying Contracts on Arbitrum Sepolia.");
-        // appGateway.deployContracts(421614);
-        // vm.stopBroadcast();
+        appGateway.deployContracts(421614,  wethAddresses[421614], "WETH", "WETH");
+        vm.stopBroadcast();
     }
 }

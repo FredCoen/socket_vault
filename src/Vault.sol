@@ -13,12 +13,10 @@ contract WETHVault is IVault, ERC4626, PlugBase {
 
     error TimelockActive();
 
-    constructor(
-        IERC20 _weth,
-        string memory _name,
-        string memory _symbol,
-        address _spokePool
-    ) ERC4626(_weth) ERC20(_name, _symbol) {
+    constructor(IERC20 _weth, string memory _name, string memory _symbol, address _spokePool)
+        ERC4626(_weth)
+        ERC20(_name, _symbol)
+    {
         spokePool = V3SpokePoolInterface(_spokePool);
     }
 
@@ -37,61 +35,43 @@ contract WETHVault is IVault, ERC4626, PlugBase {
         return IERC20(asset()).balanceOf(address(this));
     }
 
-    function executeIntent(
-        V3SpokePoolInterface.V3RelayData memory relayData
-    ) external onlySocket {
-        require(
-            relayData.outputAmount <= IERC20(asset()).balanceOf(address(this)),
-            "Not enough assets"
-        );
+    function executeIntent(V3SpokePoolInterface.V3RelayData memory relayData) external onlySocket {
+        require(relayData.outputAmount <= IERC20(asset()).balanceOf(address(this)), "Not enough assets");
         timelock = block.timestamp + 1 days;
         IERC20(asset()).approve(address(spokePool), relayData.outputAmount);
-        spokePool.fillRelay(
-            relayData,
-            block.chainid,
-            bytes32(uint256(uint160(address(this))))
-        );
+        spokePool.fillRelay(relayData, block.chainid, bytes32(uint256(uint160(address(this)))));
     }
 
     /**
      * @dev Override deposit function to check timelock
      */
-    function deposit(
-        uint256 assets,
-        address receiver
-    ) public override timelockPassed returns (uint256) {
+    function deposit(uint256 assets, address receiver) public override timelockPassed returns (uint256) {
         return super.deposit(assets, receiver);
     }
 
     /**
      * @dev Override mint function to check timelock
      */
-    function mint(
-        uint256 shares,
-        address receiver
-    ) public override timelockPassed returns (uint256) {
+    function mint(uint256 shares, address receiver) public override timelockPassed returns (uint256) {
         return super.mint(shares, receiver);
     }
 
     /**
      * @dev Override withdraw function to check timelock
      */
-    function withdraw(
-        uint256 assets,
-        address receiver,
-        address owner
-    ) public override timelockPassed returns (uint256) {
+    function withdraw(uint256 assets, address receiver, address owner)
+        public
+        override
+        timelockPassed
+        returns (uint256)
+    {
         return super.withdraw(assets, receiver, owner);
     }
 
     /**
      * @dev Override redeem function to check timelock
      */
-    function redeem(
-        uint256 shares,
-        address receiver,
-        address owner
-    ) public override timelockPassed returns (uint256) {
+    function redeem(uint256 shares, address receiver, address owner) public override timelockPassed returns (uint256) {
         return super.redeem(shares, receiver, owner);
     }
 }

@@ -13,9 +13,7 @@ contract DepositFees is Script {
 
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
-        FeesPlug feesPlug = FeesPlug(
-            payable(vm.envAddress("ARBITRUM_FEES_PLUG"))
-        );
+        FeesPlug feesPlug = FeesPlug(payable(vm.envAddress("ARBITRUM_FEES_PLUG")));
         address appGateway = vm.envAddress("APP_GATEWAY");
 
         address sender = vm.addr(privateKey);
@@ -23,16 +21,8 @@ contract DepositFees is Script {
         console.log("Using address %s with %s balance in wei", sender, balance);
 
         uint256 feesAmount = 0.005 ether;
-        feesPlug.deposit{value: feesAmount}(
-            ETH_ADDRESS,
-            appGateway,
-            feesAmount
-        );
-        console.log(
-            "Added fee balance for AppGateway %s",
-            feesAmount,
-            appGateway
-        );
+        feesPlug.deposit{value: feesAmount}(ETH_ADDRESS, appGateway, feesAmount);
+        console.log("Added fee balance for AppGateway %s", feesAmount, appGateway);
         vm.stopBroadcast();
     }
 }

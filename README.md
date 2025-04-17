@@ -55,3 +55,8 @@ Now we'll deploy the Vault as well as the SpokePoolWrapper to our target chains 
 forge script script/DeployOnChainContracts.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir
 ```
 
+
+
+
+
+source .env && cast send $APP_GATEWAY "deployContracts(uint32,address,string,string)" 84532 $WETH_ADDRESS 'WETH' 'WETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC

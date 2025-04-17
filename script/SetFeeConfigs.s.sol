@@ -20,11 +20,7 @@ contract DepositFees is Script {
 
         address appGateway = vm.envAddress("APP_GATEWAY");
 
-        Fees memory fees = Fees({
-            feePoolChain: 421614,
-            feePoolToken: ETH_ADDRESS,
-            amount: 0.01 ether
-        });
+        Fees memory fees = Fees({feePoolChain: 421614, feePoolToken: ETH_ADDRESS, amount: 0.01 ether});
 
         SolverAppGateway(appGateway).setFees(fees);
     }

@@ -23,11 +23,7 @@ contract SolverAppGatewayDeploy is Script {
 
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-        Fees memory fees = Fees({
-            feePoolChain: 421614,
-            feePoolToken: ETH_ADDRESS,
-            amount: 0.001 ether
-        });
+        Fees memory fees = Fees({feePoolChain: 421614, feePoolToken: ETH_ADDRESS, amount: 0.001 ether});
 
         SolverAppGateway appGateway = new SolverAppGateway(
             addressResolver,
@@ -39,9 +35,6 @@ contract SolverAppGatewayDeploy is Script {
         );
 
         console.log("SolverAppGateway contract:", address(appGateway));
-        console.log(
-            "See SolverAppGateway on EVMx: https://evmx.cloud.blockscout.com/address/%s",
-            address(appGateway)
-        );
+        console.log("See SolverAppGateway on EVMx: https://evmx.cloud.blockscout.com/address/%s", address(appGateway));
     }
 }
