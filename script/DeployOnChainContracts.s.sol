@@ -23,8 +23,8 @@ contract DeployOnChainContracts is Script {
 
         SolverAppGateway appGateway = SolverAppGateway(vm.envAddress("APP_GATEWAY"));
 
-        // appGateway.deployContracts(84532, ETH_ADDRESS, "WETH", "WETH");
-        // console.log("Deploying Contracts on Arbitrum Sepolia.");
+        appGateway.deployContracts(wethAddresses[84532], ETH_ADDRESS, "WETH", "WETH");
+        console.log("Deploying Contracts on Arbitrum Sepolia.");
         appGateway.deployContracts(421614,  wethAddresses[421614], "WETH", "WETH");
         vm.stopBroadcast();
     }

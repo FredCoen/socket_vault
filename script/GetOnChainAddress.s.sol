@@ -11,8 +11,11 @@ contract GetOnChainAddress is Script {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
         SolverAppGateway appGateway = SolverAppGateway(vm.envAddress("APP_GATEWAY"));
-        address forwarderAddress = appGateway.forwarderAddresses(appGateway.spokePoolWrapper(), 421614);
-        address onChainSpokePoolWrapper = IForwarder(forwarderAddress).getOnChainAddress();
+        address forwarderAddressSpokePoolWrapper = appGateway.forwarderAddresses(appGateway.spokePoolWrapper(), 421614);
+        address onChainSpokePoolWrapper = IForwarder(forwarderAddressSpokePoolWrapper).getOnChainAddress();
         console.log("Arbitrum Sepolia On chain SpokePoolWrapper: %s", onChainSpokePoolWrapper);
+        address forwarderAddressVault = appGateway.forwarderAddresses(appGateway.wethVault(),84532 );
+        address onChainVault = IForwarder(forwarderAddressVault).getOnChainAddress();
+        console.log("Base Sepolia On chain WETH Vault: %s", onChainVault);
     }
 }

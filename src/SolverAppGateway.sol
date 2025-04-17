@@ -71,10 +71,14 @@ contract SolverAppGateway is AppGatewayBase {
         ISpokePoolWrapper(forwarderAddresses[spokePoolWrapper][chainSlug_]).setSpokePool(
             chainSlug_ == BASE_SEPOLIA_CHAIN_ID ? address(spokePoolBase) : address(spokePoolArbitrum)
         );
+        address onchainAddress = getOnChainAddress(spokePoolWrapper, chainSlug_);
+        watcherPrecompileConfig().setIsValidPlug(chainSlug_, onchainAddress, true);
+       
 
         IVault(forwarderAddresses[wethVault][chainSlug_]).setSpokePool(
             chainSlug_ == BASE_SEPOLIA_CHAIN_ID ? address(spokePoolBase) : address(spokePoolArbitrum)
         );
+        
     }
 
     struct FundsDepositedParams {
@@ -107,9 +111,9 @@ contract SolverAppGateway is AppGatewayBase {
     {
         FundsDepositedParams memory params = abi.decode(payload_, (FundsDepositedParams));
         if (
-            uint32(uint256(params.destinationChainId)) == ARBITRUM_SEPOLIA_CHAIN_ID
-                && toAddressUnchecked(params.outputToken) == WETH_ARBITRUM
-                && toAddressUnchecked(params.inputToken) == WETH_BASE && chainSlug_ == BASE_SEPOLIA_CHAIN_ID
+            uint32(uint256(params.destinationChainId)) == BASE_SEPOLIA_CHAIN_ID
+                && toAddressUnchecked(params.outputToken) == WETH_BASE
+                && toAddressUnchecked(params.inputToken) == WETH_ARBITRUM && chainSlug_ == ARBITRUM_SEPOLIA_CHAIN_ID
         ) {
             V3SpokePoolInterface.V3RelayData memory relayData = V3SpokePoolInterface.V3RelayData({
                 depositor: params.depositor,
@@ -125,7 +129,9 @@ contract SolverAppGateway is AppGatewayBase {
                 exclusivityDeadline: params.exclusivityDeadline,
                 message: params.message
             });
-            IVault(forwarderAddresses[wethVault][chainSlug_]).executeIntent(relayData);
+            IVault(forwarderAddresses[wethVault][BASE_SEPOLIA_CHAIN_ID]).executeIntent(relayData);
+        }else{
+            revert("Invalid intent");
         }
     }
 

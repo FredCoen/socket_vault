@@ -16,7 +16,7 @@ Create a `.env` file with with the relevant variables found in `.env.example`
 The SolverAppGateway contract runs the solver's logic as well as deployments of our onchain liquidity vaults and a wrapper contract around across protocol's SpokePool. Deploying these contracts through the SolverAppGateway allows us to (explain plugs and forward addresses)
 
 ```bash
-forge script script/DeploySolverAppGateway.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir
+forge script script/DeploySolverAppGateway.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir --evm-version paris
 ```
 
 After deployment, locate the contract address in the console output:
@@ -57,6 +57,17 @@ forge script script/DeployOnChainContracts.s.sol --broadcast --skip-simulation -
 
 
 
+deploy on chain contracts
+
+source .env && cast send $APP_GATEWAY "deployContracts(uint32,address,string,string)" 84532 0x4200000000000000000000000000000000000006 'WETH' 'WETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
+source .env && cast send $APP_GATEWAY "deployContracts(uint32,address,string,string)" 421614 0x980B62Da83eFf3D4576C647993b0c1D7faf17c73 'WETH' 'WETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
+
+Get onchain spoke pool wrapper source chain address
+
+forge script script/GetOnChainAddress.s.sol --broadcast --skip-simulation --via-ir
+
+Deposit in spoke pool wrapper on source chain
+
+ forge script script/DepositInSpokePoolWrapper.s.sol:DepositInSpokePoolWrapper --sig "run(uint256,uint256)" 421614 84532 --broadcast
 
 
-source .env && cast send $APP_GATEWAY "deployContracts(uint32,address,string,string)" 84532 $WETH_ADDRESS 'WETH' 'WETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
