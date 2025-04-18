@@ -51,30 +51,49 @@ contract SpokePoolWrapper is PlugBase {
     error InvalidExclusiveRelayer();
 
     /**
-     * @notice Maximum period in seconds for exclusivity parameter (copy pasta from across protocol)
+     * @dev Error thrown when input validation fails
+     */
+    error InvalidInput();
+
+    /**
+     * @notice Maximum period in seconds for exclusivity parameter
+     * @dev Copied from Across protocol to maintain compatibility
      */
     uint32 public constant MAX_EXCLUSIVITY_PERIOD_SECONDS = 31_536_000;
 
     /**
      * @notice The address of the Across Protocol SpokePool contract
      */
-    address public spokePool;
+    address public immutable spokePool;
 
     /**
-     * @notice Mapping to store all deposits made in a block. Can be queried by the app gateway
+     * @notice Emitted when a deposit is made through this wrapper
+     * @param depositor The address that made the deposit
+     * @param recipient The address that will receive the tokens
+     * @param inputToken The token deposited
+     * @param outputToken The token to be received
+     * @param inputAmount The amount deposited
+     * @param outputAmount The amount to be received
+     * @param destinationChainId The destination chain ID
+     * @param depositId The unique ID for this deposit
      */
-    mapping(uint256 => FundsDepositedParams[]) public depositsPerBlock;
-
-    constructor(address _spokePool) {
-        spokePool = _spokePool;
-    }
+    event DepositMade(
+        bytes32 indexed depositor,
+        bytes32 indexed recipient,
+        bytes32 inputToken,
+        bytes32 outputToken,
+        uint256 inputAmount,
+        uint256 outputAmount,
+        uint256 indexed destinationChainId,
+        uint256 depositId
+    );
 
     /**
-     * @notice Sets the address of the SpokePool contract
-     * @dev Can only be called by the Socket contract
+     * @notice Constructor sets the SpokePool address
      * @param _spokePool The address of the SpokePool contract
      */
-    function setSpokePool(address _spokePool) external onlySocket {
+    constructor(address _spokePool) {
+        require(_spokePool != address(0), "SpokePool cannot be zero address");
         spokePool = _spokePool;
     }
 
@@ -108,7 +127,19 @@ contract SpokePoolWrapper is PlugBase {
         uint32 exclusivityParameter,
         bytes calldata message
     ) external payable {
-        // @dev exclusivityDeadline is copy pasta from across protocol, so that this wrapper provides identical data to across protocol FundsDeposited event
+        if (depositor == bytes32(0) || recipient == bytes32(0) || inputToken == bytes32(0) || outputToken == bytes32(0)) {
+            revert InvalidInput();
+        }
+        if (inputAmount == 0 || outputAmount == 0 || destinationChainId == 0) {
+            revert InvalidInput();
+        }
+        if (fillDeadline <= block.timestamp) {
+            revert InvalidInput();
+        }
+        
+        
+        // Calculate exclusivityDeadline based on exclusivityParameter
+        // This logic is copied from Across protocol to provide identical data to the FundsDeposited event
         uint32 exclusivityDeadline = exclusivityParameter;
         if (exclusivityDeadline > 0) {
             if (exclusivityDeadline <= MAX_EXCLUSIVITY_PERIOD_SECONDS) {
@@ -136,14 +167,26 @@ contract SpokePoolWrapper is PlugBase {
             exclusiveRelayer: exclusiveRelayer,
             message: message
         });
-        depositsPerBlock[block.number].push(params);
 
         _callAppGateway(abi.encode(params), bytes32(0));
         _forwardDeposit(params, msg.value);
+
+        emit DepositMade(
+            depositor,
+            recipient,
+            inputToken,
+            outputToken,
+            inputAmount,
+            outputAmount,
+            destinationChainId,
+            params.acrossDepositId
+        );
     }
 
     /**
      * @notice Forwards the deposit to the Across SpokePool contract
+     * @param params The deposit parameters
+     * @param value The ETH value to forward with the call
      */
     function _forwardDeposit(FundsDepositedParams memory params, uint256 value) internal {
         V3SpokePoolInterface(spokePool).deposit{value: value}(
@@ -160,23 +203,5 @@ contract SpokePoolWrapper is PlugBase {
             params.exclusivityDeadline,
             params.message
         );
-    }
-
-    /**
-     * @notice Get all deposits stored for a specific block
-     * @param blockNumber The block number to query
-     * @return Array of deposits made during that block
-     */
-    function getDepositsAtBlock(uint256 blockNumber) external view returns (FundsDepositedParams[] memory) {
-        return depositsPerBlock[blockNumber];
-    }
-
-    /**
-     * @notice Get number of deposits at a specific block
-     * @param blockNumber The block number to query
-     * @return Number of deposits
-     */
-    function getNumberOfDepositsAtBlock(uint256 blockNumber) external view returns (uint256) {
-        return depositsPerBlock[blockNumber].length;
     }
 }
