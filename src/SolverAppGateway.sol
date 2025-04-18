@@ -78,7 +78,6 @@ contract SolverAppGateway is AppGatewayBase {
         IVault(forwarderAddresses[wethVault][chainSlug_]).setSpokePool(
             chainSlug_ == BASE_SEPOLIA_CHAIN_ID ? address(spokePoolBase) : address(spokePoolArbitrum)
         );
-        
     }
 
     struct FundsDepositedParams {

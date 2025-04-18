@@ -66,6 +66,9 @@ Get onchain spoke pool wrapper source chain address
 
 forge script script/GetOnChainAddress.s.sol --broadcast --skip-simulation --via-ir
 
+Deposit asset in the weth vault on base!
+
+forge script script/DepositInVault.s.sol --broadcast --skip-simulation --via-ir
 Deposit in spoke pool wrapper on source chain
 
  forge script script/DepositInSpokePoolWrapper.s.sol:DepositInSpokePoolWrapper --sig "run(uint256,uint256)" 421614 84532 --broadcast
