@@ -127,7 +127,8 @@ contract SpokePoolWrapper is PlugBase {
         uint32 exclusivityParameter,
         bytes calldata message
     ) external payable {
-        if (depositor == bytes32(0) || recipient == bytes32(0) || inputToken == bytes32(0) || outputToken == bytes32(0)) {
+        if (depositor == bytes32(0) || recipient == bytes32(0) || inputToken == bytes32(0) || outputToken == bytes32(0))
+        {
             revert InvalidInput();
         }
         if (inputAmount == 0 || outputAmount == 0 || destinationChainId == 0) {
@@ -136,8 +137,7 @@ contract SpokePoolWrapper is PlugBase {
         if (fillDeadline <= block.timestamp) {
             revert InvalidInput();
         }
-        
-        
+
         // Calculate exclusivityDeadline based on exclusivityParameter
         // This logic is copied from Across protocol to provide identical data to the FundsDeposited event
         uint32 exclusivityDeadline = exclusivityParameter;

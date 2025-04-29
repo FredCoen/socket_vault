@@ -21,4 +21,3 @@ contract CheckFeesBalance is Script {
         console.log("Fees available Arbitrum fees plug: %s", availableFeesArbitrum);
     }
 }
-

@@ -14,7 +14,7 @@ import {Vm} from "forge-std/Vm.sol";
 contract DepositInVault is Script {
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        string memory rpc = vm.envString("RPC_84532");
+        string memory rpc = vm.envString("RPC_11155420");
         vm.createSelectFork(rpc);
 
         // Start recording logs
@@ -22,57 +22,56 @@ contract DepositInVault is Script {
 
         vm.startBroadcast(privateKey);
 
-        address vaultAddress = vm.envAddress("VAULT_84532");
+        address vaultAddress = vm.envAddress("VAULT_11155420");
         IERC4626 vault = IERC4626(vaultAddress);
-        
+
         // Get the underlying asset of the vault
         address assetAddress = vault.asset();
         IERC20 asset = IERC20(assetAddress);
-        
+
         // Set the amount to deposit (in this case 0.01 ETH or equivalent)
         uint256 depositAmount = 0.05 ether;
-        
+
         console.log("Depositing to Vault at: %s", vaultAddress);
         console.log("Asset Address: %s", assetAddress);
         console.log("Deposit Amount: %s", depositAmount);
         console.log("Depositor: %s", vm.addr(privateKey));
-        
+
         // Check for allowance and approve if needed
         uint256 currentAllowance = asset.allowance(vm.addr(privateKey), vaultAddress);
         if (currentAllowance < depositAmount) {
             console.log("Approving Vault to spend assets");
             asset.approve(vaultAddress, type(uint256).max);
         }
-        
+
         // Get balance before deposit
         uint256 balanceBefore = asset.balanceOf(vm.addr(privateKey));
         console.log("Balance before deposit: %s", balanceBefore);
-        
+
         // If we're dealing with WETH, we might need to wrap ETH first
         // This assumes asset is WETH with a deposit function
         // If deposit function is not available, this will revert
         try asset.balanceOf(vm.addr(privateKey)) returns (uint256 balance) {
             if (balance < depositAmount) {
                 console.log("Wrapping ETH to WETH");
-                (bool success, ) = assetAddress.call{value: depositAmount}("");
+                (bool success,) = assetAddress.call{value: depositAmount}("");
                 require(success, "Failed to wrap ETH");
             }
         } catch {
             console.log("Asset is not WETH or does not support direct deposits");
         }
-        
+
         // Deposit assets to the vault
-        uint256 sharesReceived = vault.deposit(depositAmount, vm.addr(privateKey));
-        
-        console.log("Deposit completed successfully!");
-        console.log("Shares received: %s", sharesReceived);
-        
-        // Get balance after deposit
-        uint256 balanceAfter = asset.balanceOf(vm.addr(privateKey));
-        console.log("Balance after deposit: %s", balanceAfter);
-        console.log("Vault token balance: %s", vault.balanceOf(vm.addr(privateKey)));
-        
+        // uint256 sharesReceived = vault.deposit(depositAmount, vm.addr(privateKey));
+
+        // console.log("Deposit completed successfully!");
+        // console.log("Shares received: %s", sharesReceived);
+
+        // // Get balance after deposit
+        // uint256 balanceAfter = asset.balanceOf(vm.addr(privateKey));
+        // console.log("Balance after deposit: %s", balanceAfter);
+        // console.log("Vault token balance: %s", vault.balanceOf(vm.addr(privateKey)));
+
         vm.stopBroadcast();
-        
     }
-} 
+}

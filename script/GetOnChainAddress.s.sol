@@ -14,8 +14,8 @@ contract GetOnChainAddress is Script {
         address forwarderAddressSpokePoolWrapper = appGateway.forwarderAddresses(appGateway.spokePoolWrapper(), 421614);
         address onChainSpokePoolWrapper = IForwarder(forwarderAddressSpokePoolWrapper).getOnChainAddress();
         console.log("Arbitrum Sepolia On chain SpokePoolWrapper: %s", onChainSpokePoolWrapper);
-        address forwarderAddressVault = appGateway.forwarderAddresses(appGateway.wethVault(),84532 );
+        address forwarderAddressVault = appGateway.forwarderAddresses(appGateway.wethVault(), 11155420);
         address onChainVault = IForwarder(forwarderAddressVault).getOnChainAddress();
-        console.log("Base Sepolia On chain WETH Vault: %s", onChainVault);
+        console.log("Optimism Sepolia On chain WETH Vault: %s", onChainVault);
     }
 }

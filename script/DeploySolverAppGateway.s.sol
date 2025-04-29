@@ -17,6 +17,7 @@ contract SolverAppGatewayDeploy is Script {
         address addressResolver = vm.envAddress("ADDRESS_RESOLVER");
         address spokePoolArbitrum = vm.envAddress("SPOKE_POOL_421614");
         address spokePoolBase = vm.envAddress("SPOKE_POOL_84532");
+        address spokePoolOptimism = vm.envAddress("SPOKE_POOL_11155420");
 
         string memory rpc = vm.envString("EVMX_RPC");
         vm.createSelectFork(rpc);
@@ -30,6 +31,7 @@ contract SolverAppGatewayDeploy is Script {
             fees,
             spokePoolArbitrum,
             spokePoolBase,
+            spokePoolOptimism, 
             abi.encodePacked(type(SpokePoolWrapper).creationCode),
             abi.encodePacked(type(WETHVault).creationCode)
         );

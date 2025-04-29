@@ -81,13 +81,13 @@ contract DepositInV3SpokePool is Script {
                 console.log("Found FundsDeposited event:");
 
                 // Extract indexed parameters from topics
-                uint256 destinationChainId = uint256(entry.topics[1]);
-                uint256 depositId = uint256(entry.topics[2]);
-                bytes32 depositorFromEvent = bytes32(entry.topics[3]);
+                uint256 _destinationChainId = uint256(entry.topics[1]);
+                uint256 _depositId = uint256(entry.topics[2]);
+                bytes32 _depositorFromEvent = bytes32(entry.topics[3]);
 
-                console.log("  Destination Chain ID: %s", destinationChainId);
-                console.log("  Deposit ID: %s", depositId);
-                console.log("  Depositor: %s", address(uint160(uint256(depositorFromEvent))));
+                console.log("  Destination Chain ID: %s", _destinationChainId);
+                console.log("  Deposit ID: %s", _depositId);
+                console.log("  Depositor: %s", address(uint160(uint256(_depositorFromEvent))));
 
                 // Decode the non-indexed parameters from data
                 (
@@ -100,7 +100,6 @@ contract DepositInV3SpokePool is Script {
                     uint32 exclusivityDeadlineFromEvent,
                     bytes32 recipientFromEvent,
                     bytes32 exclusiveRelayerFromEvent,
-                    bytes memory messageFromEvent
                 ) = abi.decode(
                     entry.data, (bytes32, bytes32, uint256, uint256, uint32, uint32, uint32, bytes32, bytes32, bytes)
                 );

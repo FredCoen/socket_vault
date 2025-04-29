@@ -8,11 +8,6 @@ import {V3SpokePoolInterface} from "./across/V3SpokePoolInterface.sol";
  * @notice Interface for the custom methods of the Vault contract that are not part of the ERC4626 interface
  */
 interface IVault {
-    /**
-     * @notice Sets the address of the SpokePool contract
-     * @param _spokePool Address of the SpokePool contract
-     */
-    function setSpokePool(address _spokePool) external;
 
     /**
      * @notice Returns the address of the SpokePool contract

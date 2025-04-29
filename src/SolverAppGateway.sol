@@ -27,33 +27,41 @@ interface ISpokePoolWrapper {
 contract SolverAppGateway is AppGatewayBase {
     /// @notice Across V3 SpokePool on Arbitrum
     V3SpokePoolInterface public immutable spokePoolArbitrum;
-    
+
     /// @notice Across V3 SpokePool on Base
     V3SpokePoolInterface public immutable spokePoolBase;
 
+    /// @notice Across V3 SpokePool on Optimism
+    V3SpokePoolInterface public immutable spokePoolOptimism;
+
     /// @notice Chain ID constant for Arbitrum Sepolia
     uint32 public constant ARBITRUM_SEPOLIA_CHAIN_ID = 421614;
-    
+
     /// @notice Chain ID constant for Base Sepolia
     uint32 public constant BASE_SEPOLIA_CHAIN_ID = 84532;
-    
+
+    uint32 public constant OPTIMISM_SEPOLIA_CHAIN_ID = 11155420;
+
     /// @notice WETH address on Arbitrum
     address public constant WETH_ARBITRUM = 0x980B62Da83eFf3D4576C647993b0c1D7faf17c73;
-    
+
     /// @notice WETH address on Base
-    address public constant WETH_BASE = 0x4200000000000000000000000000000000000006;
-    
+        address public constant WETH_BASE = 0x4200000000000000000000000000000000000006;
+
+    /// @notice WETH address on Optimism
+    address public constant WETH_OPTIMISM = 0x4200000000000000000000000000000000000006;
+
     /// @notice Contract ID for SpokePoolWrapper
     bytes32 public immutable spokePoolWrapper;
-    
+
     /// @notice Contract ID for WETHVault
     bytes32 public immutable wethVault;
-    
+
     /// @notice Creation code for WETHVault
-    bytes public immutable wethVaultCreationCode;
-    
+    bytes public  wethVaultCreationCode;
+
     /// @notice Creation code for SpokePoolWrapper
-    bytes public immutable spokePoolWrapperCreationCode;
+    bytes public  spokePoolWrapperCreationCode;
 
     /**
      * @dev Error thrown when an intent is invalid
@@ -67,11 +75,7 @@ contract SolverAppGateway is AppGatewayBase {
      * @param spokePWrapperAddress The deployed SpokePoolWrapper address
      * @param wethVaultAddress The deployed WETHVault address
      */
-    event ContractsDeployed(
-        uint32 indexed chainSlug,
-        address spokePWrapperAddress,
-        address wethVaultAddress
-    );
+    event ContractsDeployed(uint32 indexed chainSlug, address spokePWrapperAddress, address wethVaultAddress);
 
     /**
      * @notice Emitted when an intent is executed
@@ -79,11 +83,7 @@ contract SolverAppGateway is AppGatewayBase {
      * @param depositId The deposit ID in the Across protocol
      * @param amount The amount being relayed
      */
-    event IntentExecuted(
-        uint32 indexed originChainId,
-        uint256 indexed depositId,
-        uint256 amount
-    );
+    event IntentExecuted(uint32 indexed originChainId, uint256 indexed depositId, uint256 amount);
 
     /**
      * @notice Constructor sets initial parameters for the gateway
@@ -99,6 +99,7 @@ contract SolverAppGateway is AppGatewayBase {
         Fees memory fees_,
         address spokePoolArbitrum_,
         address spokePoolBase_,
+        address spokePoolOptimism_,
         bytes memory spokePoolWrapperCreationCode_,
         bytes memory wethVaultCreationCode_
     ) AppGatewayBase(addressResolver_) {
@@ -107,7 +108,7 @@ contract SolverAppGateway is AppGatewayBase {
         require(spokePoolBase_ != address(0), "Base SpokePool cannot be zero");
         require(spokePoolWrapperCreationCode_.length > 0, "SpokePoolWrapper creation code cannot be empty");
         require(wethVaultCreationCode_.length > 0, "WETHVault creation code cannot be empty");
-        
+
         spokePoolWrapperCreationCode = spokePoolWrapperCreationCode_;
         wethVaultCreationCode = wethVaultCreationCode_;
         spokePoolWrapper = _createContractId("SpokePoolWrapper");
@@ -116,6 +117,7 @@ contract SolverAppGateway is AppGatewayBase {
         _setOverrides(fees_);
         spokePoolArbitrum = V3SpokePoolInterface(spokePoolArbitrum_);
         spokePoolBase = V3SpokePoolInterface(spokePoolBase_);
+        spokePoolOptimism = V3SpokePoolInterface(spokePoolOptimism_);
     }
 
     /**
@@ -129,32 +131,34 @@ contract SolverAppGateway is AppGatewayBase {
         external
         async
     {
-        require(chainSlug_ == ARBITRUM_SEPOLIA_CHAIN_ID || chainSlug_ == BASE_SEPOLIA_CHAIN_ID, "Unsupported chain");
+        require(chainSlug_ == ARBITRUM_SEPOLIA_CHAIN_ID || chainSlug_ == BASE_SEPOLIA_CHAIN_ID || chainSlug_ == OPTIMISM_SEPOLIA_CHAIN_ID, "Unsupported chain");
         require(weth_ != address(0), "WETH address cannot be zero");
         require(bytes(name_).length > 0, "Name cannot be empty");
         require(bytes(symbol_).length > 0, "Symbol cannot be empty");
-        
+
         creationCodeWithArgs[wethVault] = abi.encodePacked(
             wethVaultCreationCode,
             abi.encode(
                 weth_,
                 name_,
                 symbol_,
-                chainSlug_ == BASE_SEPOLIA_CHAIN_ID ? address(spokePoolBase) : address(spokePoolArbitrum)
+                chainSlug_ == BASE_SEPOLIA_CHAIN_ID ? address(spokePoolBase) : 
+                chainSlug_ == OPTIMISM_SEPOLIA_CHAIN_ID ? address(spokePoolOptimism) : 
+                address(spokePoolArbitrum)
             )
         );
 
         creationCodeWithArgs[spokePoolWrapper] = abi.encodePacked(
             spokePoolWrapperCreationCode,
-            abi.encode(chainSlug_ == BASE_SEPOLIA_CHAIN_ID ? address(spokePoolBase) : address(spokePoolArbitrum))
+            abi.encode(chainSlug_ == BASE_SEPOLIA_CHAIN_ID ? address(spokePoolBase) : 
+                chainSlug_ == OPTIMISM_SEPOLIA_CHAIN_ID ? address(spokePoolOptimism) : 
+                address(spokePoolArbitrum))
         );
         _deploy(spokePoolWrapper, chainSlug_, IsPlug.YES);
         _deploy(wethVault, chainSlug_, IsPlug.YES);
-        
+
         emit ContractsDeployed(
-            chainSlug_,
-            forwarderAddresses[spokePoolWrapper][chainSlug_],
-            forwarderAddresses[wethVault][chainSlug_]
+            chainSlug_, forwarderAddresses[spokePoolWrapper][chainSlug_], forwarderAddresses[wethVault][chainSlug_]
         );
     }
 
@@ -164,15 +168,9 @@ contract SolverAppGateway is AppGatewayBase {
      * @param chainSlug_ The identifier of the chain where the contracts were deployed
      */
     function initialize(uint32 chainSlug_) public override async {
-
-        
-        address spokePoolAddress = chainSlug_ == BASE_SEPOLIA_CHAIN_ID 
-            ? address(spokePoolBase) 
-            : address(spokePoolArbitrum);
-        
         address onchainAddress = getOnChainAddress(spokePoolWrapper, chainSlug_);
         watcherPrecompileConfig().setIsValidPlug(chainSlug_, onchainAddress, true);
-            }
+    }
 
     /**
      * @dev Replication of the FundsDeposited event emitted by Across protocol Spoke Pool
@@ -194,7 +192,7 @@ contract SolverAppGateway is AppGatewayBase {
     }
 
     /**
-     * @notice Handles intents being submitted 
+     * @notice Handles intents being submitted
      * @param chainSlug_ The chain ID
      * @param payload_ The encoded message containing deposit information
      */
@@ -206,10 +204,9 @@ contract SolverAppGateway is AppGatewayBase {
     {
         FundsDepositedParams memory params = abi.decode(payload_, (FundsDepositedParams));
         if (
-            uint32(uint256(params.destinationChainId)) == BASE_SEPOLIA_CHAIN_ID
+            (uint32(uint256(params.destinationChainId)) == BASE_SEPOLIA_CHAIN_ID||uint32(uint256(params.destinationChainId))==OPTIMISM_SEPOLIA_CHAIN_ID)
                 && toAddressUnchecked(params.outputToken) == WETH_BASE
-                && toAddressUnchecked(params.inputToken) == WETH_ARBITRUM 
-                && chainSlug_ == ARBITRUM_SEPOLIA_CHAIN_ID
+                 && chainSlug_ == ARBITRUM_SEPOLIA_CHAIN_ID
         ) {
             V3SpokePoolInterface.V3RelayData memory relayData = V3SpokePoolInterface.V3RelayData({
                 depositor: params.depositor,
@@ -225,17 +222,11 @@ contract SolverAppGateway is AppGatewayBase {
                 exclusivityDeadline: params.exclusivityDeadline,
                 message: params.message
             });
-            IVault(forwarderAddresses[wethVault][BASE_SEPOLIA_CHAIN_ID]).executeIntent(relayData);
-            
-            emit IntentExecuted(
-                chainSlug_,
-                params.acrossDepositId,
-                params.outputAmount
-            );
+            IVault(forwarderAddresses[wethVault][OPTIMISM_SEPOLIA_CHAIN_ID]).executeIntent(relayData);
+
+            emit IntentExecuted(chainSlug_, params.acrossDepositId, params.outputAmount);
         } else {
-    
-                revert InvalidIntent("Unsupported intent");
-            }
+            revert InvalidIntent("Unsupported intent");
         }
     }
 

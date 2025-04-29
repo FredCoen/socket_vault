@@ -21,7 +21,9 @@ contract WETHVault is IVault, ERC4626, PlugBase {
      * @notice The Across Protocol SpokePool contract
      */
     V3SpokePoolInterface public immutable spokePool;
-    
+
+    uint256 public totalGrossFeesEarned;
+
     /**
      * @notice Timestamp until which deposits and withdrawals are locked
      * @dev Set after executing an intent to prevent front-running
@@ -39,16 +41,17 @@ contract WETHVault is IVault, ERC4626, PlugBase {
     error InsufficientAssets();
 
     /**
+     * @dev Error thrown when the fee is negative
+     */
+    error NegativeFee();
+
+    /**
      * @notice Emitted when an intent is executed through this vault
      * @param outputAmount The amount of tokens used to fill the relay
      * @param depositId The deposit ID being filled
      * @param originChainId The chain ID where the deposit originated
      */
-    event IntentExecuted(
-        uint256 outputAmount,
-        uint256 depositId,
-        uint256 originChainId
-    );
+    event IntentExecuted(uint256 outputAmount, uint256 inputAmount, uint256 depositId, uint256 originChainId);
 
     /**
      * @notice Constructor sets initial parameters
@@ -95,19 +98,18 @@ contract WETHVault is IVault, ERC4626, PlugBase {
         if (relayData.outputAmount > assetBalance) {
             revert InsufficientAssets();
         }
-        
+
         timelock = block.timestamp + 1 days;
-        
-        IERC20(asset()).safeApprove(address(spokePool), relayData.outputAmount);
+
+        IERC20(asset()).approve(address(spokePool), relayData.outputAmount);
         spokePool.fillRelay(relayData, block.chainid, bytes32(uint256(uint160(address(this)))));
-        
-        IERC20(asset()).safeApprove(address(spokePool), 0);
-        
-        emit IntentExecuted(
-            relayData.outputAmount,
-            relayData.depositId,
-            relayData.originChainId
-        );
+
+        if (relayData.outputAmount > relayData.inputAmount) {
+            revert NegativeFee();
+        }
+        totalGrossFeesEarned += relayData.inputAmount - relayData.outputAmount;
+
+        emit IntentExecuted(relayData.outputAmount, relayData.inputAmount, relayData.depositId, relayData.originChainId);
     }
 
     /**

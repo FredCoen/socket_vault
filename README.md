@@ -1,24 +1,24 @@
 # Building an Intent Solver on Socket: Step-by-Step Guide
 
-This guide demonstrates how to build an Intent Solver strategy on Socket Protocol that taps into on-chain vault liquidity to fill cross-chain intents.
+This guide demonstrates how to build an Intent Solver strategy on Socket Protocol that taps into on-chain vault liquidity to fill cross-chain intents. More specifically this tutorial implements a solver filling intents auctioned of on chain by across protocol. For the purpose of simplicity and demonstration only ETH transfers from Arbitrum Sepolia to Base Sepolia are supported. 
 
 ## Overview
 
 In this tutorial, we'll implement a solver that:
 1. Is hosted by socket's trust minimized infrastructure
-2. Listens for intents submitted ot the across protocol
+2. Listens for intents submitted to the across protocol
 2. Taps into on-chain vault liquidity to fill intents on the destination chain
 
-The purpose of this tutorial is to demonstrate how this can e built on Socket and demonstrate the end to end flow. The supported flow here is an intent issued on Arbitrum Sepolia to send WETH to Base Sepolia.
+The purpose of this tutorial is to demonstrate how this can be built on Socket and run the the end to end flow. This is not a production ready implementation. For example the current vault implementation does not properly take care of minting and redemption.
 
 
 ## Architecture
 
 The system consists of three main components:
 
-1. **SpokePoolWrapper**: A wrapper around Across Protocol's SpokePool that acts as a Socket Plug
+1. **SpokePoolWrapper**: A wrapper around Across Protocol's SpokePool that acts as a Socket Plug ( this is because currently the socket App gateway does not support listening to on chain events of non plug contracts )
 2. **WETHVault**: An ERC4626-compliant vault that provides the liquidity needed to fill intents
-3. **SolverAppGateway**: The coordinator that runs the solver strategy to match intents with liquidity
+3. **SolverAppGateway**: The coordinator that runs the solver strategy that fills a specific type of intents under certain conditions by tapping into the permissioned vault liquidity
 
 ## Project Structure
 
@@ -31,7 +31,7 @@ The system consists of three main components:
 │   │   ├── IVault.sol
 │   │   └── across/
 │   ├── libraries/            - Utility libraries
-├── script/                   - Deployment and interaction scripts
+├── script/                   - Deployment and read/write scripts
 └── foundry.toml              - Foundry configuration
 ```
 
@@ -64,8 +64,6 @@ The system consists of three main components:
 
 ## Step 2: Deploy the Solver App Gateway
 
-The SolverAppGateway serves as the coordinator for our solver strategy:
-
 ```bash
 forge script script/DeploySolverAppGateway.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir --evm-version paris
 ```
@@ -92,13 +90,13 @@ You can check your fee balance at any time:
 forge script script/CheckFeesBalance.s.sol --broadcast --skip-simulation --via-ir
 ```
 
-## Step 4: Deploy On-Chain Components
+## Step 4: Deploy On-Chain Contracts ( Vaults + SpokePoolWrappers)
 
-Next, deploy the vault and SpokePoolWrapper on both chains:
+Next, deploy the vault and SpokePoolWrapper on both chains ( using cast here since Socket doesn't support scripts for deployments yet ):
 
 1. Deploy on Base Sepolia:
    ```bash
-   source .env && cast send $APP_GATEWAY "deployContracts(uint32,address,string,string)" 84532 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
+   source .env && cast send $APP_GATEWAY "deployContracts(uint32,address,string,string)" 11155420 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
    ```
 
 2. Deploy on Arbitrum Sepolia:
@@ -110,31 +108,33 @@ Next, deploy the vault and SpokePoolWrapper on both chains:
    ```bash
    forge script script/GetOnChainAddress.s.sol --broadcast --skip-simulation --via-ir
    ```
+ 
+   Take note of the deployed vault address on Base Sepolia and the SpokePoolWrapper address on Arbitrum Sepolia and add them to your  `.env` file:
 
-   Take note of the deployed vault addresses and add the Base Sepolia vault address to your `.env` file:
+   **Note**: Only those addresses are taken into account because this guide demonstrates an ETH transfer intent issued on source chain Arbitrum Sepolia with destination chain specified as Base Sepolia. 
+
    ```
    VAULT_84532=<base-sepolia-vault-address>
+   SPOKE_POOL_WRAPPER_421614=<arbitrum-sepolia-spokePoolWrapper-address>
    ```
 
 ## Step 5: Fund the Vault with Liquidity
 
-The vault needs funds to be able to fill intents. Deposit WETH into the vault on Base Sepolia:
+The vault needs funds to be able to fill intents.This script deposits 0.05 WETH into the vault on Base Sepolia, which will be used to fill intents:
 
 ```bash
 forge script script/DepositInVault.s.sol --broadcast --skip-simulation --via-ir
 ```
 
-This script deposits 0.05 WETH into your vault, which will be used to fill  intents.
+## Step 6: Submit an Intent
 
-## Step 6: Submit an Intent (Test the Flow)
-
-Now, let's test the full flow by submitting an intent through the SpokePoolWrapper:
+Now, let's test the end to end flow by submitting an intent through the SpokePoolWrapper on Arbitrum Sepolia:
 
 ```bash
-forge script script/DepositInSpokePoolWrapper.s.sol:DepositInSpokePoolWrapper --sig "run(uint256,uint256)" 421614 84532 --broadcast
+forge script script/DepositInSpokePoolWrapper.s.sol:DepositInSpokePoolWrapper --sig "run(uint256,uint256)" 421614 11155420 --broadcast
 ```
 
-This command:
+This script:
 1. Creates a deposit (intent) on Arbitrum Sepolia (chain ID 421614)
 2. Targets Base Sepolia (chain ID 84532) as the destination
 
@@ -143,18 +143,18 @@ This command:
 When you submit an intent through the SpokePoolWrapper, the following sequence occurs:
 
 1. **Intent Creation**: 
-   - The `deposit` function on SpokePoolWrapper is called with parameters specifying the Arbitrum to Sepolia WETH transfer
-   - SpokePoolWrapper forwards this to Across Protocol's SpokePool
-   - It also notifies the SolverAppGateway via Socket Protocol
+   - The `deposit` function on SpokePoolWrapper is called with parameters specifying the intent configured to transfer ETH from Arbitrum Sepolia to Base Sepolia
+   - The intent gets forwarded to Across Protocol's SpokePool
+   - The SolverAppGateway deployed on Socket gets notified about the intent to be filled
 
 2. **Intent Detection**:
-   - The SolverAppGateway receives the notification via Socket's `callFromChain` function
+   - The SolverAppGateway receives the notification via Socket Plug's `callFromChain` function
    - It decodes the payload to extract the deposit parameters
-   - The gateway validates that this is an intent it can fill
+   - The gateway strategy validates that this is an intent it can fill
 
 3. **Liquidity Provision**:
-   - The gateway calls the WETHVault on the destination chain
-   - The vault's `executeIntent` function is triggered
+   - The gateway calls the WETHVault via the privileged Socket restricted `executeIntent` function
+   - Socket's switchboard validate the correctness of the call before it is made. In this tutorial we make use of the already implemented FastSwitchboard which only requires the watcher's approval. This however can be configured according to application's trust assumption needs.
    - The vault checks that it has sufficient liquidity
 
 4. **Intent Execution**:
@@ -164,6 +164,7 @@ When you submit an intent through the SpokePoolWrapper, the following sequence o
 5. **Completion**:
    - The recipient receives their funds on the destination chain
    - The intent gets settled via across protocol settlement mechanism
+   - Once settled the funds get rerouted to the vault
 
 ## Step 8: Verify the Transaction
 
