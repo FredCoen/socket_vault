@@ -48,7 +48,7 @@ contract RouterGateway is AppGatewayBase {
         spokePoolWrapper = _createContractId("SpokePoolWrapper");
 
         spokePoolArbitrum = spokePoolArbitrum_;
-        spokePoolBase =spokePoolBase_;
+        spokePoolBase = spokePoolBase_;
         spokePoolOptimism = spokePoolOptimism_;
 
         _setOverrides(fees_);
@@ -57,7 +57,6 @@ contract RouterGateway is AppGatewayBase {
     function addStrategy(IStrategy strategy) external {
         strategies.push(IStrategy(strategy));
     }
-
 
     function deploySpokePoolWrapper(uint32 chainSlug_) external async {
         require(

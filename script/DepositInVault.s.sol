@@ -27,7 +27,6 @@ contract DepositInVault is Script {
         IERC4626 vaultConservative = IERC4626(conservativeVault);
         IERC4626 vaultAgressive = IERC4626(agressiveVault);
 
-
         // Get the underlying asset of the vault
         address assetAddress = vaultConservative.asset();
         IERC20 asset = IERC20(assetAddress);
@@ -35,11 +34,9 @@ contract DepositInVault is Script {
         // Set the amount to deposit (in this case 0.01 ETH or equivalent)
         // uint256 depositAmount = 0.05 ether;
 
-   
+        asset.approve(conservativeVault, type(uint256).max);
 
-            asset.approve(conservativeVault, type(uint256).max);
-    
-            asset.approve(agressiveVault, type(uint256).max);
+        asset.approve(agressiveVault, type(uint256).max);
 
         // // Get balance before deposit
         // uint256 balanceBefore = asset.balanceOf(vm.addr(privateKey));

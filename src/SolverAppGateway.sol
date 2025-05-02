@@ -66,7 +66,6 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
      */
     error InvalidIntent(string reason);
 
-
     event ContractDeployed(uint32 indexed chainSlug, address wethVaultAddress);
 
     /**
@@ -82,7 +81,7 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
      * @param depositId The deposit ID in the Across protocol
      */
     event IntentExecutionScheduled(uint256 indexed originChainId, uint256 indexed depositId);
- 
+
     constructor(
         address addressResolver_,
         Fees memory fees_,
@@ -116,10 +115,7 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
      * @param name_ The name for the vault token
      * @param symbol_ The symbol for the vault token
      */
-    function deployVault(uint32 chainSlug_, address weth_, string memory name_, string memory symbol_)
-        external
-        async
-    {
+    function deployVault(uint32 chainSlug_, address weth_, string memory name_, string memory symbol_) external async {
         require(
             chainSlug_ == ARBITRUM_SEPOLIA_CHAIN_ID || chainSlug_ == BASE_SEPOLIA_CHAIN_ID
                 || chainSlug_ == OPTIMISM_SEPOLIA_CHAIN_ID,
