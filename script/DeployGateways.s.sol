@@ -43,7 +43,7 @@ contract DeployGateways is Script {
             spokePoolOptimism,
             abi.encodePacked(type(WETHVault).creationCode),
             address(router),
-            10
+            5
         );
 
         SolverAppGateway conservativeSolver = new SolverAppGateway(
@@ -54,7 +54,7 @@ contract DeployGateways is Script {
             spokePoolOptimism,
             abi.encodePacked(type(WETHVault).creationCode),
             address(router),
-            100
+            30
         );
 
         router.addStrategy(agressiveSolver);
