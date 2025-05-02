@@ -32,15 +32,14 @@ contract DepositInSpokePoolWrapper is Script {
         address spokePoolWrapperAddress = vm.envAddress(string.concat("SPOKE_POOL_WRAPPER_", sourceChainId.toString()));
         SpokePoolWrapper spokePoolWrapper = SpokePoolWrapper(spokePoolWrapperAddress);
 
-        // Deposit parameters
         address depositor = vm.addr(privateKey);
         bytes32 depositorBytes32 = bytes32(uint256(uint160(depositor)));
         bytes32 recipientBytes32 = depositorBytes32;
         bytes32 inputTokenBytes32 = bytes32(uint256(uint160(wethAddresses[sourceChainId])));
         bytes32 outputTokenBytes32 = bytes32(uint256(uint160(wethAddresses[destinationChainId])));
-        uint256 inputAmount = 0.02 ether;
+        uint256 inputAmount = 0.015 ether;
         uint256 outputAmount = 0.01 ether;
-        bytes32 exclusiveRelayerBytes32 = bytes32(uint256(uint160(vm.envAddress("VAULT_11155420"))));
+        bytes32 exclusiveRelayerBytes32 = bytes32(uint256(uint160(vm.envAddress("CONSERVATIVE_VAULT"))));
         uint32 quoteTimestamp = uint32(block.timestamp);
         uint32 fillDeadline = uint32(block.timestamp) + 15 minutes;
         uint32 exclusivityParameter = uint32(block.timestamp) + 15 minutes;
@@ -62,8 +61,36 @@ contract DepositInSpokePoolWrapper is Script {
             exclusivityParameter,
             message
         );
+         depositor = vm.addr(privateKey);
+         depositorBytes32 = bytes32(uint256(uint160(depositor)));
+         recipientBytes32 = depositorBytes32;
+         inputTokenBytes32 = bytes32(uint256(uint160(wethAddresses[sourceChainId])));
+         outputTokenBytes32 = bytes32(uint256(uint160(wethAddresses[destinationChainId])));
+         inputAmount = 0.03 ether;
+         outputAmount = 0.02 ether;
+         exclusiveRelayerBytes32 = bytes32(uint256(uint160(vm.envAddress("AGRESSIVE_VAULT"))));
+         quoteTimestamp = uint32(block.timestamp);
+         fillDeadline = uint32(block.timestamp) + 15 minutes;
+         exclusivityParameter = uint32(block.timestamp) + 15 minutes;
+          message = "";
 
-        console.log("Deposited !");
+        console.log("Depositing %s WETH from chain %s to chain %s", inputAmount, sourceChainId, destinationChainId);
+
+        spokePoolWrapper.deposit{value: inputAmount}(
+            depositorBytes32,
+            recipientBytes32,
+            inputTokenBytes32,
+            outputTokenBytes32,
+            inputAmount,
+            outputAmount,
+            destinationChainId,
+            exclusiveRelayerBytes32,
+            quoteTimestamp,
+            fillDeadline,
+            exclusivityParameter,
+            message
+        );
+
 
         vm.stopBroadcast();
     }

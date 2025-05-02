@@ -13,11 +13,16 @@ contract CheckFeesBalance is Script {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
 
         vm.startBroadcast(privateKey);
-        address appGateway = vm.envAddress("APP_GATEWAY");
-
+        address agressiveSolver = vm.envAddress("AGRESSIVE_SOLVER");
+        address conservativeSolver = vm.envAddress("CONSERVATIVE_SOLVER");
         FeesManager feesManager = FeesManager(payable(vm.envAddress("FEES_MANAGER")));
+        address router = vm.envAddress("ROUTER");
 
-        uint256 availableFeesArbitrum = feesManager.getAvailableFees(421614, appGateway, ETH_ADDRESS);
-        console.log("Fees available Arbitrum fees plug: %s", availableFeesArbitrum);
+        uint256 availableFeesAgressive = feesManager.getAvailableFees(421614, conservativeSolver, ETH_ADDRESS);
+        uint256 availableFeesConservative = feesManager.getAvailableFees(421614, agressiveSolver, ETH_ADDRESS);
+        uint256 availableFeesRouter = feesManager.getAvailableFees(421614, router, ETH_ADDRESS);
+        console.log("Fees available Arbitrum fees plug on AgressiveSolver: %s", availableFeesAgressive);
+        console.log("Fees available Arbitrum fees plug on ConservativeSolver: %s", availableFeesConservative);
+        console.log("Fees available Arbitrum fees plug on Router: %s", availableFeesRouter);
     }
 }

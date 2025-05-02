@@ -22,44 +22,41 @@ contract DepositInVault is Script {
 
         vm.startBroadcast(privateKey);
 
-        address vaultAddress = vm.envAddress("VAULT_11155420");
-        IERC4626 vault = IERC4626(vaultAddress);
+        address conservativeVault = vm.envAddress("CONSERVATIVE_VAULT");
+        address agressiveVault = vm.envAddress("AGRESSIVE_VAULT");
+        IERC4626 vaultConservative = IERC4626(conservativeVault);
+        IERC4626 vaultAgressive = IERC4626(agressiveVault);
+
 
         // Get the underlying asset of the vault
-        address assetAddress = vault.asset();
+        address assetAddress = vaultConservative.asset();
         IERC20 asset = IERC20(assetAddress);
 
         // Set the amount to deposit (in this case 0.01 ETH or equivalent)
-        uint256 depositAmount = 0.05 ether;
+        // uint256 depositAmount = 0.05 ether;
 
-        console.log("Depositing to Vault at: %s", vaultAddress);
-        console.log("Asset Address: %s", assetAddress);
-        console.log("Deposit Amount: %s", depositAmount);
-        console.log("Depositor: %s", vm.addr(privateKey));
+   
 
-        // Check for allowance and approve if needed
-        uint256 currentAllowance = asset.allowance(vm.addr(privateKey), vaultAddress);
-        if (currentAllowance < depositAmount) {
-            console.log("Approving Vault to spend assets");
-            asset.approve(vaultAddress, type(uint256).max);
-        }
+            asset.approve(conservativeVault, type(uint256).max);
+    
+            asset.approve(agressiveVault, type(uint256).max);
 
-        // Get balance before deposit
-        uint256 balanceBefore = asset.balanceOf(vm.addr(privateKey));
-        console.log("Balance before deposit: %s", balanceBefore);
+        // // Get balance before deposit
+        // uint256 balanceBefore = asset.balanceOf(vm.addr(privateKey));
+        // console.log("Balance before deposit: %s", balanceBefore);
 
-        // If we're dealing with WETH, we might need to wrap ETH first
-        // This assumes asset is WETH with a deposit function
-        // If deposit function is not available, this will revert
-        try asset.balanceOf(vm.addr(privateKey)) returns (uint256 balance) {
-            if (balance < depositAmount) {
-                console.log("Wrapping ETH to WETH");
-                (bool success,) = assetAddress.call{value: depositAmount}("");
-                require(success, "Failed to wrap ETH");
-            }
-        } catch {
-            console.log("Asset is not WETH or does not support direct deposits");
-        }
+        // // If we're dealing with WETH, we might need to wrap ETH first
+        // // This assumes asset is WETH with a deposit function
+        // // If deposit function is not available, this will revert
+        // try asset.balanceOf(vm.addr(privateKey)) returns (uint256 balance) {
+        //     if (balance < depositAmount) {
+        //         console.log("Wrapping ETH to WETH");
+        //         (bool success,) = assetAddress.call{value: depositAmount}("");
+        //         require(success, "Failed to wrap ETH");
+        //     }
+        // } catch {
+        //     console.log("Asset is not WETH or does not support direct deposits");
+        // }
 
         // Deposit assets to the vault
         // uint256 sharesReceived = vault.deposit(depositAmount, vm.addr(privateKey));

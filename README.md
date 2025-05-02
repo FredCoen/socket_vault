@@ -65,7 +65,7 @@ The system consists of three main components:
 ## Step 2: Deploy the Solver App Gateway
 
 ```bash
-forge script script/DeploySolverAppGateway.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir --evm-version paris
+forge script script/DeployGateways.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir --evm-version paris
 ```
 
 After deployment, locate the contract address in the console output and add it to your `.env` file:
@@ -94,14 +94,17 @@ forge script script/CheckFeesBalance.s.sol --broadcast --skip-simulation --via-i
 
 Next, deploy the vault and SpokePoolWrapper on both chains ( using cast here since Socket doesn't support scripts for deployments yet ):
 
-1. Deploy on Base Sepolia:
+1. Deploy on Vaults on Optimsm Sepolia:
    ```bash
-   source .env && cast send $APP_GATEWAY "deployContracts(uint32,address,string,string)" 11155420 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
+   source .env && cast send $CONSERVATIVE_SOLVER "deployVault(uint32,address,string,string)" 11155420 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
+   ```
+   ```bash
+   source .env && cast send $AGRESSIVE_SOLVER "deployVault(uint32,address,string,string)" 11155420 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
    ```
 
-2. Deploy on Arbitrum Sepolia:
+2. Deploy SpokePoolWrapper on Arbitrum Sepolia:
    ```bash
-   source .env && cast send $APP_GATEWAY "deployContracts(uint32,address,string,string)" 421614 0x980B62Da83eFf3D4576C647993b0c1D7faf17c73 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
+   source .env && cast send $ROUTER "deploySpokePoolWrapper(uint32)" 421614 --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
    ```
 
 3. Get the on-chain addresses of your deployed contracts:
