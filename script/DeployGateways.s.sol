@@ -3,9 +3,6 @@ pragma solidity ^0.8.0;
 
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
-import {Fees} from "socket-protocol/protocol/utils/common/Structs.sol";
-import {ETH_ADDRESS} from "socket-protocol/protocol/utils/common/Constants.sol";
-
 import {SpokePoolWrapper} from "../src/SpokePoolWrapper.sol";
 import {WETHVault} from "../src/Vault.sol";
 import {SolverAppGateway} from "../src/SolverAppGateway.sol";
@@ -24,7 +21,7 @@ contract DeployGateways is Script {
 
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-        Fees memory fees = Fees({feePoolChain: 421614, feePoolToken: ETH_ADDRESS, amount: 0.001 ether});
+        uint256 maxFees = 0.001 ether;
 
         RouterGateway router = new RouterGateway(
             addressResolver,
@@ -32,12 +29,12 @@ contract DeployGateways is Script {
             spokePoolBase,
             spokePoolOptimism,
             abi.encodePacked(type(SpokePoolWrapper).creationCode),
-            fees
+            maxFees
         );
 
         SolverAppGateway agressiveSolver = new SolverAppGateway(
             addressResolver,
-            fees,
+            maxFees,
             spokePoolArbitrum,
             spokePoolBase,
             spokePoolOptimism,
@@ -48,7 +45,7 @@ contract DeployGateways is Script {
 
         SolverAppGateway conservativeSolver = new SolverAppGateway(
             addressResolver,
-            fees,
+            maxFees,
             spokePoolArbitrum,
             spokePoolBase,
             spokePoolOptimism,

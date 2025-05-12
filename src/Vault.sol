@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import "openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "socket-protocol/base/PlugBase.sol";
+import "socket-protocol/protocol/base/PlugBase.sol";
 import {V3SpokePoolInterface} from "./interfaces/across/V3SpokePoolInterface.sol";
 import {IVault} from "./interfaces/IVault.sol";
 

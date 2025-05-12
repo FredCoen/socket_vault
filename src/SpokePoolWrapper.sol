@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 import {V3SpokePoolInterface, V3SpokePoolInterfaceExtended} from "./interfaces/across/V3SpokePoolInterface.sol";
 import {Bytes32ToAddress} from "./libraries/Bytes32ToAddress.sol";
-import "socket-protocol/base/PlugBase.sol";
+import "socket-protocol/protocol/base/PlugBase.sol";
+import {RouterGateway} from "./RouterGateway.sol";
 
 /**
  * @title SpokePoolWrapper
@@ -168,7 +169,7 @@ contract SpokePoolWrapper is PlugBase {
             message: message
         });
 
-        _callAppGateway(abi.encode(params), bytes32(0));
+        RouterGateway(address(socket__)).notifyIntent(abi.encode(params), uint32(block.chainid));
         _forwardDeposit(params, msg.value);
 
         emit DepositMade(

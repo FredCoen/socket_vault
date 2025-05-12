@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
 import {SolverAppGateway} from "../src/SolverAppGateway.sol";
-import {IForwarder} from "lib/socket-protocol/contracts/interfaces/IForwarder.sol";
+import {IForwarder} from "socket-protocol/evmx/interfaces/IForwarder.sol";
 import {RouterGateway} from "../src/RouterGateway.sol";
 
 contract GetOnChainAddress is Script {

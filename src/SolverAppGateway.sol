@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import "socket-protocol/base/AppGatewayBase.sol";
+import "socket-protocol/evmx/base/AppGatewayBase.sol";
 import {V3SpokePoolInterface} from "./interfaces/across/V3SpokePoolInterface.sol";
 import "./SpokePoolWrapper.sol";
 import {WETHVault} from "./Vault.sol";
@@ -84,7 +84,7 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
 
     constructor(
         address addressResolver_,
-        Fees memory fees_,
+        uint256 fees_,
         address spokePoolArbitrum_,
         address spokePoolBase_,
         address spokePoolOptimism_,
@@ -100,7 +100,7 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
         wethVaultCreationCode = wethVaultCreationCode_;
         wethVault = _createContractId("WETHVault");
 
-        _setOverrides(fees_);
+        _setMaxFees(fees_);
         spokePoolArbitrum = V3SpokePoolInterface(spokePoolArbitrum_);
         spokePoolBase = V3SpokePoolInterface(spokePoolBase_);
         spokePoolOptimism = V3SpokePoolInterface(spokePoolOptimism_);
@@ -115,7 +115,10 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
      * @param name_ The name for the vault token
      * @param symbol_ The symbol for the vault token
      */
-    function deployVault(uint32 chainSlug_, address weth_, string memory name_, string memory symbol_) external async {
+    function deployVault(uint32 chainSlug_, address weth_, string memory name_, string memory symbol_)
+        external
+        async(bytes(""))
+    {
         require(
             chainSlug_ == ARBITRUM_SEPOLIA_CHAIN_ID || chainSlug_ == BASE_SEPOLIA_CHAIN_ID
                 || chainSlug_ == OPTIMISM_SEPOLIA_CHAIN_ID,
@@ -173,7 +176,7 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
      * @param chainSlug_ The chain ID
      * @param payload_ The encoded message containing deposit information
      */
-    function receiveIntent(uint32 chainSlug_, bytes calldata payload_) external onlyRouter {
+    function processIntent(uint32 chainSlug_, bytes calldata payload_) external onlyRouter {
         FundsDepositedParams memory params = abi.decode(payload_, (FundsDepositedParams));
         if (
             uint32(uint256(params.destinationChainId)) == OPTIMISM_SEPOLIA_CHAIN_ID
@@ -201,17 +204,9 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
         }
     }
 
-    function fillIntent(V3SpokePoolInterface.V3RelayData memory relayData) public async {
+    function fillIntent(V3SpokePoolInterface.V3RelayData memory relayData) public async(bytes("")) {
         IVault(forwarderAddresses[wethVault][OPTIMISM_SEPOLIA_CHAIN_ID]).executeIntent(relayData);
         emit IntentExecuted(relayData.originChainId, relayData.depositId);
-    }
-
-    /**
-     * @notice Updates the fee configuration
-     * @param fees_ New fee configuration
-     */
-    function setFees(Fees memory fees_) external {
-        fees = fees_;
     }
 
     /**

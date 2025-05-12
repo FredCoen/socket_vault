@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import "socket-protocol/base/AppGatewayBase.sol";
+import "socket-protocol/evmx/base/AppGatewayBase.sol";
 import {V3SpokePoolInterface} from "./interfaces/across/V3SpokePoolInterface.sol";
 import "./SpokePoolWrapper.sol";
 import {WETHVault} from "./Vault.sol";
@@ -41,7 +41,7 @@ contract RouterGateway is AppGatewayBase {
         address spokePoolBase_,
         address spokePoolOptimism_,
         bytes memory spokePoolWrapperCreationCode_,
-        Fees memory fees_
+        uint256 fees_
     ) AppGatewayBase(addressResolver_) {
         require(spokePoolWrapperCreationCode_.length > 0, "SpokePoolWrapper creation code cannot be empty");
         spokePoolWrapperCreationCode = spokePoolWrapperCreationCode_;
@@ -51,14 +51,14 @@ contract RouterGateway is AppGatewayBase {
         spokePoolBase = spokePoolBase_;
         spokePoolOptimism = spokePoolOptimism_;
 
-        _setOverrides(fees_);
+        _setMaxFees(fees_);
     }
 
     function addStrategy(IStrategy strategy) external {
         strategies.push(IStrategy(strategy));
     }
 
-    function deploySpokePoolWrapper(uint32 chainSlug_) external async {
+    function deploySpokePoolWrapper(uint32 chainSlug_) external async(bytes("")) {
         require(
             chainSlug_ == ARBITRUM_SEPOLIA_CHAIN_ID || chainSlug_ == BASE_SEPOLIA_CHAIN_ID
                 || chainSlug_ == OPTIMISM_SEPOLIA_CHAIN_ID,
@@ -83,19 +83,14 @@ contract RouterGateway is AppGatewayBase {
      * @dev Gives permission to the SpokePoolWrapper to interact with the Socket
      * @param chainSlug_ The identifier of the chain where the contracts were deployed
      */
-    function initialize(uint32 chainSlug_) public override async {
+    function initialize(uint32 chainSlug_) public override async(bytes("")) {
         address onchainAddress = getOnChainAddress(spokePoolWrapper, chainSlug_);
         watcherPrecompileConfig().setIsValidPlug(chainSlug_, onchainAddress, true);
     }
 
-    function callFromChain(uint32 chainSlug_, address, bytes32, bytes calldata payload_)
-        external
-        override
-        async
-        onlyWatcherPrecompile
-    {
+    function notifyIntent(bytes calldata payload_, uint32 chainSlug_) external async(bytes("")) onlyWatcherPrecompile {
         for (uint256 i = 0; i < strategies.length; i++) {
-            IStrategy(strategies[i]).receiveIntent(chainSlug_, payload_);
+            IStrategy(strategies[i]).processIntent(chainSlug_, payload_);
         }
     }
 }
