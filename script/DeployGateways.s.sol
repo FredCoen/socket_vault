@@ -13,7 +13,6 @@ contract DeployGateways is Script {
     function run() external {
         address addressResolver = vm.envAddress("ADDRESS_RESOLVER");
         address spokePoolArbitrum = vm.envAddress("SPOKE_POOL_421614");
-        address spokePoolBase = vm.envAddress("SPOKE_POOL_84532");
         address spokePoolOptimism = vm.envAddress("SPOKE_POOL_11155420");
 
         string memory rpc = vm.envString("EVMX_RPC");
@@ -26,7 +25,6 @@ contract DeployGateways is Script {
         RouterGateway router = new RouterGateway(
             addressResolver,
             spokePoolArbitrum,
-            spokePoolBase,
             spokePoolOptimism,
             abi.encodePacked(type(SpokePoolWrapper).creationCode),
             maxFees
@@ -36,7 +34,6 @@ contract DeployGateways is Script {
             addressResolver,
             maxFees,
             spokePoolArbitrum,
-            spokePoolBase,
             spokePoolOptimism,
             abi.encodePacked(type(WETHVault).creationCode),
             address(router),
@@ -47,7 +44,6 @@ contract DeployGateways is Script {
             addressResolver,
             maxFees,
             spokePoolArbitrum,
-            spokePoolBase,
             spokePoolOptimism,
             abi.encodePacked(type(WETHVault).creationCode),
             address(router),

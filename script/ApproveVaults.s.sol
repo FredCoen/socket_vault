@@ -25,7 +25,6 @@ contract DepositInVault is Script {
         address conservativeVault = vm.envAddress("CONSERVATIVE_VAULT");
         address agressiveVault = vm.envAddress("AGRESSIVE_VAULT");
         IERC4626 vaultConservative = IERC4626(conservativeVault);
-        IERC4626 vaultAgressive = IERC4626(agressiveVault);
         address assetAddress = vaultConservative.asset();
         IERC20 asset = IERC20(assetAddress);
         asset.approve(conservativeVault, type(uint256).max);

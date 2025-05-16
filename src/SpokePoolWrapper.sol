@@ -68,28 +68,6 @@ contract SpokePoolWrapper is PlugBase {
     address public immutable spokePool;
 
     /**
-     * @notice Emitted when a deposit is made through this wrapper
-     * @param depositor The address that made the deposit
-     * @param recipient The address that will receive the tokens
-     * @param inputToken The token deposited
-     * @param outputToken The token to be received
-     * @param inputAmount The amount deposited
-     * @param outputAmount The amount to be received
-     * @param destinationChainId The destination chain ID
-     * @param depositId The unique ID for this deposit
-     */
-    event DepositMade(
-        bytes32 indexed depositor,
-        bytes32 indexed recipient,
-        bytes32 inputToken,
-        bytes32 outputToken,
-        uint256 inputAmount,
-        uint256 outputAmount,
-        uint256 indexed destinationChainId,
-        uint256 depositId
-    );
-
-    /**
      * @notice Constructor sets the SpokePool address
      * @param _spokePool The address of the SpokePool contract
      */
@@ -128,17 +106,6 @@ contract SpokePoolWrapper is PlugBase {
         uint32 exclusivityParameter,
         bytes calldata message
     ) external payable {
-        if (depositor == bytes32(0) || recipient == bytes32(0) || inputToken == bytes32(0) || outputToken == bytes32(0))
-        {
-            revert InvalidInput();
-        }
-        if (inputAmount == 0 || outputAmount == 0 || destinationChainId == 0) {
-            revert InvalidInput();
-        }
-        if (fillDeadline <= block.timestamp) {
-            revert InvalidInput();
-        }
-
         // Calculate exclusivityDeadline based on exclusivityParameter
         // This logic is copied from Across protocol to provide identical data to the FundsDeposited event
         uint32 exclusivityDeadline = exclusivityParameter;
@@ -170,27 +137,7 @@ contract SpokePoolWrapper is PlugBase {
         });
 
         RouterGateway(address(socket__)).notifyIntent(abi.encode(params), uint32(block.chainid));
-        _forwardDeposit(params, msg.value);
-
-        emit DepositMade(
-            depositor,
-            recipient,
-            inputToken,
-            outputToken,
-            inputAmount,
-            outputAmount,
-            destinationChainId,
-            params.acrossDepositId
-        );
-    }
-
-    /**
-     * @notice Forwards the deposit to the Across SpokePool contract
-     * @param params The deposit parameters
-     * @param value The ETH value to forward with the call
-     */
-    function _forwardDeposit(FundsDepositedParams memory params, uint256 value) internal {
-        V3SpokePoolInterface(spokePool).deposit{value: value}(
+        V3SpokePoolInterface(spokePool).deposit{value: msg.value}(
             params.depositor,
             params.recipient,
             params.inputToken,

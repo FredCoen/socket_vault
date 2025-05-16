@@ -22,8 +22,6 @@ contract WETHVault is IVault, ERC4626, PlugBase {
      */
     V3SpokePoolInterface public immutable spokePool;
 
-    uint256 public totalGrossFeesEarned;
-
     /**
      * @notice Timestamp until which deposits and withdrawals are locked
      * @dev Set after executing an intent to prevent front-running
@@ -34,16 +32,6 @@ contract WETHVault is IVault, ERC4626, PlugBase {
      * @dev Error thrown when an operation is attempted while the timelock is active
      */
     error TimelockActive();
-
-    /**
-     * @dev Error thrown when there are insufficient assets to execute an intent
-     */
-    error InsufficientAssets();
-
-    /**
-     * @dev Error thrown when the fee is negative
-     */
-    error NegativeFee();
 
     /**
      * @notice Emitted when an intent is executed through this vault
@@ -64,8 +52,6 @@ contract WETHVault is IVault, ERC4626, PlugBase {
         ERC4626(_weth)
         ERC20(_name, _symbol)
     {
-        require(address(_weth) != address(0), "WETH cannot be zero address");
-        require(_spokePool != address(0), "SpokePool cannot be zero address");
         spokePool = V3SpokePoolInterface(_spokePool);
     }
 
@@ -94,22 +80,10 @@ contract WETHVault is IVault, ERC4626, PlugBase {
      * @dev Can only be called by the Socket contract
      */
     function executeIntent(V3SpokePoolInterface.V3RelayData memory relayData) external override onlySocket {
-        uint256 assetBalance = IERC20(asset()).balanceOf(address(this));
-        if (relayData.outputAmount > assetBalance) {
-            revert InsufficientAssets();
-        }
-
+        // give time for intent to settle
         timelock = block.timestamp + 1 days;
-
         IERC20(asset()).approve(address(spokePool), relayData.outputAmount);
         spokePool.fillRelay(relayData, block.chainid, bytes32(uint256(uint160(address(this)))));
-
-        if (relayData.outputAmount > relayData.inputAmount) {
-            revert NegativeFee();
-        }
-        totalGrossFeesEarned += relayData.inputAmount - relayData.outputAmount;
-
-        emit IntentExecuted(relayData.outputAmount, relayData.inputAmount, relayData.depositId, relayData.originChainId);
     }
 
     /**
