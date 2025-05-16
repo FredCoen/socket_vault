@@ -21,7 +21,7 @@ contract DeployGateways is Script {
 
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-        uint256 maxFees = 0.001 ether;
+        uint256 maxFees = 10 ether;
 
         RouterGateway router = new RouterGateway(
             addressResolver,
