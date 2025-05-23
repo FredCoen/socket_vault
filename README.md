@@ -88,7 +88,7 @@ forge script script/CheckFeesBalance.s.sol --broadcast --skip-simulation --via-i
 **On Optimism Sepolia:**
 ```bash
 source .env && cast send $CONSERVATIVE_SOLVER "deployVault(uint32,address,string,string)" 11155420 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
-source .env && cast send $AGGRESSIVE_SOLVER "deployVault(uint32,address,string,string)" 11155420 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
+source .env && cast send $AGRESSIVE_SOLVER "deployVault(uint32,address,string,string)" 11155420 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
 ```
 
 **On Arbitrum Sepolia:**

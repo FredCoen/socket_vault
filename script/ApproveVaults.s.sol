@@ -11,7 +11,12 @@ import {Vm} from "forge-std/Vm.sol";
  * @title DepositInVault
  * @notice Foundry script to deposit funds into the Vault contract
  */
-contract DepositInVault is Script {
+interface IWETH is IERC20 {
+    function deposit() external payable;
+    function withdraw(uint256) external;
+}
+
+contract ApproveVaults is Script {
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         string memory rpc = vm.envString("RPC_11155420");
@@ -25,10 +30,22 @@ contract DepositInVault is Script {
         address conservativeVault = vm.envAddress("CONSERVATIVE_VAULT");
         address agressiveVault = vm.envAddress("AGRESSIVE_VAULT");
         IERC4626 vaultConservative = IERC4626(conservativeVault);
+        IERC4626 vaultAggressive = IERC4626(agressiveVault);
         address assetAddress = vaultConservative.asset();
-        IERC20 asset = IERC20(assetAddress);
-        asset.approve(conservativeVault, type(uint256).max);
-        asset.approve(agressiveVault, type(uint256).max);
+        IWETH weth = IWETH(assetAddress);
+        
+        // Mint 0.02 WETH by depositing ETH
+        weth.deposit{value: 0.2 ether}();
+        
+        // Approve spending for both vaults
+        weth.approve(conservativeVault, type(uint256).max);
+        weth.approve(agressiveVault, type(uint256).max);
+        
+        // Deposit 0.02 WETH into conservative vault
+        vaultConservative.deposit(0.2 ether, address(this));
+        
+        // vaultAggressive.deposit(0.15 ether, address(this));
+        
         vm.stopBroadcast();
     }
 }

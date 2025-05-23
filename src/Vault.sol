@@ -17,6 +17,9 @@ import {IVault} from "./interfaces/IVault.sol";
 contract WETHVault is IVault, ERC4626, PlugBase {
     using SafeERC20 for IERC20;
 
+    uint256 public totalGrossFeesEarned;
+
+
     /**
      * @notice The Across Protocol SpokePool contract
      */
@@ -32,6 +35,16 @@ contract WETHVault is IVault, ERC4626, PlugBase {
      * @dev Error thrown when an operation is attempted while the timelock is active
      */
     error TimelockActive();
+
+     /**
+     * @dev Error thrown when there are insufficient assets to execute an intent
+     */
+    error InsufficientAssets();
+
+    /**
+     * @dev Error thrown when the fee is negative
+     */
+    error NegativeFee();
 
     /**
      * @notice Emitted when an intent is executed through this vault
@@ -80,10 +93,19 @@ contract WETHVault is IVault, ERC4626, PlugBase {
      * @dev Can only be called by the Socket contract
      */
     function executeIntent(V3SpokePoolInterface.V3RelayData memory relayData) external override onlySocket {
+         uint256 assetBalance = IERC20(asset()).balanceOf(address(this));
+        if (relayData.outputAmount > assetBalance) {
+            revert InsufficientAssets();
+        }
         // give time for intent to settle
-        timelock = block.timestamp + 1 days;
+        timelock = block.timestamp + 1 hours;
         IERC20(asset()).approve(address(spokePool), relayData.outputAmount);
         spokePool.fillRelay(relayData, block.chainid, bytes32(uint256(uint160(address(this)))));
+        if (relayData.outputAmount > relayData.inputAmount) {
+            revert NegativeFee();
+        }
+        totalGrossFeesEarned += relayData.inputAmount - relayData.outputAmount;
+        emit IntentExecuted(relayData.outputAmount, relayData.inputAmount, relayData.depositId, relayData.originChainId);
     }
 
     /**
