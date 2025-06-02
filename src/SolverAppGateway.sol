@@ -79,6 +79,8 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
         bytes message;
     }
 
+    // The strategy with which the intent is processed. This should handle filling logic, inventory rebalancing etc.
+    // For this MVP we only cover intents for WETH transfers from Arbitrum Sepolia to Optimism Sepolia.
     function processIntent(uint32 chainSlug_, bytes calldata payload_) external {
         FundsDepositedParams memory params = abi.decode(payload_, (FundsDepositedParams));
         if (
