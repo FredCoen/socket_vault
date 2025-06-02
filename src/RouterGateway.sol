@@ -46,7 +46,7 @@ contract RouterGateway is AppGatewayBase {
         address onchainAddress = getOnChainAddress(spokePoolWrapper, chainSlug_);
         watcherPrecompileConfig().setIsValidPlug(chainSlug_, onchainAddress, true);
     }
-    
+
     // Entry point for on chain trigger for intent processing. Forwards intents to registered strategies
     function notifyIntent(bytes calldata payload_, uint32 chainSlug_) external async(bytes("")) onlyWatcherPrecompile {
         for (uint256 i = 0; i < strategies.length; i++) {
