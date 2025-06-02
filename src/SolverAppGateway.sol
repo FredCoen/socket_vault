@@ -8,11 +8,6 @@ import {WETHVault} from "./Vault.sol";
 import {IVault} from "./interfaces/IVault.sol";
 import "./interfaces/IStrategy.sol";
 
-/**
- * @title SolverAppGateway
- * @notice Solver App Gateway running a Across protocol solver strategy
- * @dev Handles deployment SpokePoolWrappers and WETHVaults and executes the Intent filling strategy
- */
 contract SolverAppGateway is IStrategy, AppGatewayBase {
     address public immutable router;
     address public immutable executor;

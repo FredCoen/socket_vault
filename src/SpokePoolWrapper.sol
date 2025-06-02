@@ -6,30 +6,9 @@ import {Bytes32ToAddress} from "./libraries/Bytes32ToAddress.sol";
 import "socket-protocol/protocol/base/PlugBase.sol";
 import {RouterGateway} from "./RouterGateway.sol";
 
-/**
- * @title SpokePoolWrapper
- * @notice A wrapper contract for the Across Protocol SpokePool that integrates with Socket Protocol
- * @dev Inherits from PlugBase to enable cross-chain communication via Socket Protocol
- */
 contract SpokePoolWrapper is PlugBase {
     using Bytes32ToAddress for bytes32;
 
-    /**
-     * @notice Data structure to replicate the data emitted by Across Protocol's FundsDeposited event
-     * @param inputToken The token deposited on the source chain
-     * @param outputToken The token to be received on the destination chain
-     * @param inputAmount The amount of input tokens deposited
-     * @param outputAmount The amount of output tokens to be received
-     * @param destinationChainId The ID of the destination chain
-     * @param acrossDepositId The unique ID for this deposit in the Across Protocol
-     * @param quoteTimestamp The timestamp when the quote was generated
-     * @param fillDeadline The deadline after which the deposit cannot be filled
-     * @param exclusivityDeadline The deadline until which only the exclusive relayer can fill
-     * @param depositor The address that made the deposit
-     * @param recipient The address that will receive the tokens on the destination chain
-     * @param exclusiveRelayer The address with exclusive rights to fill the deposit until exclusivityDeadline
-     * @param message Additional data passed along with the deposit
-     */
     struct FundsDepositedParams {
         bytes32 inputToken;
         bytes32 outputToken;
@@ -46,52 +25,17 @@ contract SpokePoolWrapper is PlugBase {
         bytes message;
     }
 
-    /**
-     * @dev Error thrown when an exclusive relayer is required but not provided
-     */
     error InvalidExclusiveRelayer();
-
-    /**
-     * @dev Error thrown when input validation fails
-     */
     error InvalidInput();
 
-    /**
-     * @notice Maximum period in seconds for exclusivity parameter
-     * @dev Copied from Across protocol to maintain compatibility
-     */
     uint32 public constant MAX_EXCLUSIVITY_PERIOD_SECONDS = 31_536_000;
-
-    /**
-     * @notice The address of the Across Protocol SpokePool contract
-     */
     address public immutable spokePool;
 
-    /**
-     * @notice Constructor sets the SpokePool address
-     * @param _spokePool The address of the SpokePool contract
-     */
     constructor(address _spokePool) {
         require(_spokePool != address(0), "SpokePool cannot be zero address");
         spokePool = _spokePool;
     }
 
-    /**
-     * @notice Deposit funds to the Across Protocol
-     * @dev Creates a deposit record, notifies the app gateway, and forwards to AcrossSpokePool
-     * @param depositor The address that is making the deposit
-     * @param recipient The address that will receive the tokens on the destination chain
-     * @param inputToken The token being deposited
-     * @param outputToken The token to be received on the destination chain
-     * @param inputAmount The amount of input tokens being deposited
-     * @param outputAmount The amount of output tokens to be received
-     * @param destinationChainId The ID of the destination chain
-     * @param exclusiveRelayer The address with exclusive rights to fill the deposit until exclusivityDeadline
-     * @param quoteTimestamp The timestamp when the quote was generated
-     * @param fillDeadline The deadline after which the deposit cannot be filled
-     * @param exclusivityParameter Parameter to determine exclusivity period
-     * @param message Additional data to be passed along with the deposit
-     */
     function deposit(
         bytes32 depositor,
         bytes32 recipient,
@@ -106,15 +50,11 @@ contract SpokePoolWrapper is PlugBase {
         uint32 exclusivityParameter,
         bytes calldata message
     ) external payable {
-        // Calculate exclusivityDeadline based on exclusivityParameter
-        // This logic is copied from Across protocol to provide identical data to the FundsDeposited event
         uint32 exclusivityDeadline = exclusivityParameter;
         if (exclusivityDeadline > 0) {
             if (exclusivityDeadline <= MAX_EXCLUSIVITY_PERIOD_SECONDS) {
                 exclusivityDeadline += uint32(block.timestamp);
             }
-            // As a safety measure, prevent caller from inadvertently locking funds during exclusivity period
-            //  by forcing them to specify an exclusive relayer.
             if (exclusiveRelayer == bytes32(0)) {
                 revert InvalidExclusiveRelayer();
             }

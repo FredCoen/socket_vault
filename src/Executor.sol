@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import {V3SpokePoolInterface} from "./interfaces/across/V3SpokePoolInterface.sol";
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 library Bytes32ToAddress {
@@ -12,7 +11,6 @@ library Bytes32ToAddress {
 }
 
 contract Executor {
-
     using Bytes32ToAddress for bytes32;
     
     V3SpokePoolInterface public immutable spokePool;

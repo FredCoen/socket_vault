@@ -1,68 +1,80 @@
-# Socket Vault Solver Example
+# Building a filler strategy/vault on SOCKET
 
-A demonstration of building an Intent Solver strategy on the Socket Protocol, using on-chain vault liquidity to fill cross-chain intents. **Not production-ready.**
+This tutorial demonstrates how to build an Intent Solver strategy on the Socket Protocol, using on-chain vault liquidity to fill cross-chain intents. **Not production-ready.**
 
 ## Overview
 
-This tutorial implements two solver strategies for filling intents to transfer ETH from Arbitrum Sepolia to Optimism Sepolia. The strategies differ in how quickly they pick up intents (aggressive vs. conservative reorg risk).
+This tutorial implements two solver strategies for filling intents to transfer ETH from Arbitrum Sepolia to Optimism Sepolia. The strategies differ in how quickly they pick up intents (aggressive vs. conservative reorg risk tolerance).
 
-## Architecture
+## System Components
 
-The system consists of:
+Let's understand each component we'll build:
 
-1. **SpokePoolWrapper**: A wrapper around Across Protocol's SpokePool, acting as a Socket Plug.
-2. **Vault**: An ERC4626-compliant vault providing liquidity.
-3. **Executor**: A centralized executor who acts as the exclusive relayer specified in the intent
-3. **SolverAppGateway**: Runs the solver strategy, filling intents using vault liquidity.
-5. **RouterGateway**: Forwards intents to solver strategies.
+1. **Vault (Vault.sol)**
+   - An ERC4626-compliant vault that holds WETH open for permissionless deposits
+   - Provides liquidity for filler strategies
+   - Earns fees from facilitating transfers
+   - For simplicity purposes does not currently implement a working redemption mechanism
 
-## Project Structure
+2. **SpokePoolWrapper (SpokePoolWrapper.sol)**
+   - Wraps Across Protocol's SpokePool in order to notify Socket about new intents
 
+3. **Solver Gateway (SolverAppGateway.sol)**
+   - Implements the solver strategy
+   - Decides when to fill intents
+   - Sends payloads to execute intents to connected on chain vault
+
+4. **Router Gateway (RouterGateway.sol)**
+   - Receives and forwards intents to relevant solver strategies
+
+5. **Executor (Executor.sol)**
+   - Handles the actual execution of intents
+   - Acts as the exclusive relayer specified in the intent
+
+## Tutorial Steps
+
+### 1. Setup Development Environment
+
+```bash
+# Install Foundry if you haven't already
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+
+# Clone the repository
+git clone <repo-url>
+cd socket-vault
+forge install
+
+# Setup environment variables
+cp .env.example .env
+# Edit .env with your values:
+# PRIVATE_KEY=your-private-key
+# RPC_421614=arbitrum-sepolia-rpc-url
+# RPC_11155420=optimism-sepolia-rpc-url
 ```
-├── src/
-│   ├── SpokePoolWrapper.sol  - Wrapper for Across Protocol SpokePool
-│   ├── Vault.sol             - ERC4626 vault plug
-│   ├── SolverAppGateway.sol  - Gateway for cross chain communication and running solver strategy
-│   ├── Executor.sol          - Contract for executing intents from whitelisted vaults
-│   ├── RouterGateway.sol     - Router to forward intents to strategies
-│   ├── interfaces/           - Contract interfaces
-│   │   ├── IVault.sol
-│   │   └── across/
-│   ├── libraries/            - Utility libraries
-├── script/                   - Deployment and read/write scripts
-└── foundry.toml              - Foundry configuration
-```
-
-
-## Prerequisites
-
-- [Foundry](https://getfoundry.sh/)
-- Testnet ETH on Arbitrum Sepolia and Optimism Sepolia
-- WETH on Optimism Sepolia
-
-## Setup
-
-1. **Clone and install dependencies:**
-   ```bash
-   git clone <repo-url>
-   cd socket-vault
-   forge install
-   ```
-
-2. **Configure environment:**
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env`:
-   ```env
-   PRIVATE_KEY=your-private-key
-   RPC_421614=arbitrum-sepolia-rpc-url
-   RPC_11155420=optimism-sepolia-rpc-url
-   ```
 
 ## Deployment
 
-### 1. Deploy the Executor contract
+
+#### Vault.sol
+- Implements ERC4626 standard for tokenized vault shares
+- Holds WETH as the underlying asset
+- Executes cross-chain intents using vault liquidity
+
+#### SpokePoolWrapper.sol
+- Creates intents when users want to transfer tokens
+- Interfaces with Across Protocol's SpokePool
+- Handles deposit and relay mechanics
+
+#### SolverAppGateway.sol
+- Implements two strategies:
+  1. Conservative: Waits for more confirmations
+  2. Aggressive: Fills intents quickly
+- Manages vault deployments and intent filling
+
+### 3. Deployment Process
+
+Deploy contracts in this order:
 
 ```bash
 forge script script/DeployExecutor.s.sol --broadcast --skip-simulation --via-ir
@@ -118,23 +130,25 @@ AGGRESSIVE_VAULT=""
 
 ## Funding
 
-Seed vaults with some ETH:
+Seed vaults with some ETH (amend as needed):
 ```bash
 forge script script/FundVaults.s.sol --broadcast --skip-simulation --via-ir
 ```
-Deposit ETH via the [vault_frontend](https://github.com/FredCoen/vault_frontend).
 
 ## Submitting an Intent
 
-Submit an intent through the SpokePoolWrapper:
+Submit an intent through the SpokePoolWrapper (amend as needed):
 ```bash
 forge script script/DepositInSpokePoolWrapper.s.sol:DepositInSpokePoolWrapper --sig "run(uint256,uint256)" 421614 11155420 --broadcast
 ```
+
+Alternatively fire auction off an intent via the [vault_frontend](https://github.com/FredCoen/vault_frontend).
+
 
 ## How It Works
 
 1. **Intent Creation:** `deposit` on SpokePoolWrapper creates an intent.
 2. **Intent Detection:** RouterGateway forwards the intent to solvers.
 3. **Liquidity Provision:** Solvers call the vault to fill the intent.
-4. **Intent Execution:** Vault approves tokens and calls `fillRelay` on Across SpokePool.
+4. **Intent Execution:** Vault approves tokens and calls `fillRelay` via the Executor contract on Across SpokePool.
 5. **Completion:** Recipient receives funds; settlement returns funds to the vault.
