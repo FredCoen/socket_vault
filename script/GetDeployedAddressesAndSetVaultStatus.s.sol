@@ -26,16 +26,12 @@ contract GetDeployedAddressesAndSetVaultStatus is Script {
 
         forwarderAddressVault = conservativeSolver.forwarderAddresses(conservativeSolver.wethVault(), 11155420);
         address conservativeOnChainVault = IForwarder(forwarderAddressVault).getOnChainAddress();
-                console.log("Optimism Sepolia On chain WETH conservative solver Vault: %s", conservativeOnChainVault);
+        console.log("Optimism Sepolia On chain WETH conservative solver Vault: %s", conservativeOnChainVault);
 
-                        vm.createSelectFork(vm.envString("RPC_11155420"));
+        vm.createSelectFork(vm.envString("RPC_11155420"));
 
         vm.startBroadcast(privateKey);
 
-
-
-
-        
         executor.setVaultStatus(aggressiveOnChainVault, true);
         executor.setVaultStatus(conservativeOnChainVault, true);
     }

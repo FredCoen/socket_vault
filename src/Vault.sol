@@ -24,17 +24,17 @@ contract WETHVault is IVault, ERC4626, PlugBase {
     constructor(IERC20 _weth, string memory _name, string memory _symbol, address _spokePool, address _executor)
         ERC4626(_weth)
         ERC20(_name, _symbol)
-    {   
+    {
         executor = Executor(_executor);
         spokePool = V3SpokePoolInterface(_spokePool);
-     }
+    }
 
     function totalAssets() public view override returns (uint256) {
         return IERC20(asset()).balanceOf(address(this));
     }
 
     function executeIntent(V3SpokePoolInterface.V3RelayData memory relayData) external override onlySocket {
-         uint256 assetBalance = IERC20(asset()).balanceOf(address(this));
+        uint256 assetBalance = IERC20(asset()).balanceOf(address(this));
         if (relayData.outputAmount > assetBalance) {
             revert InsufficientAssets();
         }

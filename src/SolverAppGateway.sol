@@ -83,9 +83,9 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
         FundsDepositedParams memory params = abi.decode(payload_, (FundsDepositedParams));
         if (
             uint32(uint256(params.destinationChainId)) == OPTIMISM_SEPOLIA_CHAIN_ID
-                && toAddressUnchecked(params.outputToken) == WETH_BASE && chainSlug_ == ARBITRUM_SEPOLIA_CHAIN_ID && params.inputAmount < 0.15 ether
+                && toAddressUnchecked(params.outputToken) == WETH_BASE && chainSlug_ == ARBITRUM_SEPOLIA_CHAIN_ID
+                && params.inputAmount < 0.15 ether
         ) {
-
             V3SpokePoolInterface.V3RelayData memory relayData = V3SpokePoolInterface.V3RelayData({
                 depositor: params.depositor,
                 recipient: params.recipient,

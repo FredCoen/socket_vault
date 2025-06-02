@@ -23,4 +23,4 @@ contract DeployExecutor is Script {
 
         console.log("Executor deployed at:", address(executor));
     }
-} 
+}

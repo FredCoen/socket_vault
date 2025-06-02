@@ -12,20 +12,20 @@ library Bytes32ToAddress {
 
 contract Executor {
     using Bytes32ToAddress for bytes32;
-    
+
     V3SpokePoolInterface public immutable spokePool;
     address public owner;
-    
+
     mapping(address => bool) public whitelistedVaults;
-    
+
     event VaultWhitelisted(address indexed vault, bool status);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    
+
     modifier onlyOwner() {
         require(msg.sender == owner, "Executor: caller is not the owner");
         _;
     }
-    
+
     modifier onlyWhitelistedVault() {
         require(whitelistedVaults[msg.sender], "Executor: caller is not a whitelisted vault");
         _;
@@ -35,12 +35,12 @@ contract Executor {
         spokePool = _spokePool;
         owner = msg.sender;
     }
-    
+
     function setVaultStatus(address vault, bool status) external onlyOwner {
         whitelistedVaults[vault] = status;
         emit VaultWhitelisted(vault, status);
     }
-    
+
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "Executor: new owner is the zero address");
         address oldOwner = owner;
