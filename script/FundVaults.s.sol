@@ -16,7 +16,7 @@ interface IWETH is IERC20 {
     function withdraw(uint256) external;
 }
 
-contract ApproveVaults is Script {
+contract FundVaults is Script {
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         string memory rpc = vm.envString("RPC_11155420");
@@ -42,9 +42,9 @@ contract ApproveVaults is Script {
         weth.approve(agressiveVault, type(uint256).max);
         
         // Deposit 0.02 WETH into conservative vault
-        vaultConservative.deposit(0.2 ether, address(this));
+        // vaultConservative.deposit(0.15 ether, address(this));
         
-        // vaultAggressive.deposit(0.15 ether, address(this));
+        vaultAggressive.deposit(0.05 ether, address(this));
         
         vm.stopBroadcast();
     }

@@ -14,11 +14,6 @@ interface IVault {
      */
     function spokePool() external view returns (V3SpokePoolInterface);
 
-    /**
-     * @notice Returns the timestamp after which deposits, withdrawals, and other actions are allowed
-     * @return The timelock timestamp
-     */
-    function timelock() external view returns (uint256);
 
     /**
      * @notice Executes an intent by filling a relay through the SpokePool

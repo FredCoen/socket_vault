@@ -39,7 +39,7 @@ contract DepositInSpokePoolWrapper is Script {
         bytes32 outputTokenBytes32 = bytes32(uint256(uint160(wethAddresses[destinationChainId])));
         uint256 inputAmount = 0.02 ether;
         uint256 outputAmount = 0.01 ether;
-        bytes32 exclusiveRelayerBytes32 = bytes32(uint256(uint160(vm.envAddress("AGRESSIVE_VAULT"))));
+        bytes32 exclusiveRelayerBytes32 = bytes32(uint256(uint160(vm.envAddress("EXECUTOR"))));
         uint32 quoteTimestamp = uint32(block.timestamp);
         uint32 fillDeadline = uint32(block.timestamp) + 15 minutes;
         uint32 exclusivityParameter = uint32(block.timestamp) + 15 minutes;

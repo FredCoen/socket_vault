@@ -15,6 +15,7 @@ import "./interfaces/IStrategy.sol";
  */
 contract SolverAppGateway is IStrategy, AppGatewayBase {
     address public immutable router;
+    address public immutable executor;
     uint256 public fillDelayInSeconds;
     V3SpokePoolInterface public immutable spokePoolArbitrum;
     V3SpokePoolInterface public immutable spokePoolOptimism;
@@ -37,7 +38,8 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
         address spokePoolOptimism_,
         bytes memory wethVaultCreationCode_,
         address router_,
-        uint256 fillDelayInSeconds_
+        uint256 fillDelayInSeconds_,
+        address executor_
     ) AppGatewayBase(addressResolver_) {
         wethVaultCreationCode = wethVaultCreationCode_;
         wethVault = _createContractId("WETHVault");
@@ -46,6 +48,7 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
         spokePoolOptimism = V3SpokePoolInterface(spokePoolOptimism_);
         router = router_;
         fillDelayInSeconds = fillDelayInSeconds_;
+        executor = executor_;
     }
 
     function deployVault(uint32 chainSlug_, address weth_, string memory name_, string memory symbol_)
@@ -58,7 +61,8 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
                 weth_,
                 name_,
                 symbol_,
-                chainSlug_ == OPTIMISM_SEPOLIA_CHAIN_ID ? address(spokePoolOptimism) : address(spokePoolArbitrum)
+                chainSlug_ == OPTIMISM_SEPOLIA_CHAIN_ID ? address(spokePoolOptimism) : address(spokePoolArbitrum),
+                executor
             )
         );
         _deploy(wethVault, chainSlug_, IsPlug.YES);

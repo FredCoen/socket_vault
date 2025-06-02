@@ -11,9 +11,10 @@ This tutorial implements two solver strategies for filling intents to transfer E
 The system consists of:
 
 1. **SpokePoolWrapper**: A wrapper around Across Protocol's SpokePool, acting as a Socket Plug.
-2. **WETHVault**: An ERC4626-compliant vault providing liquidity.
+2. **Vault**: An ERC4626-compliant vault providing liquidity.
+3. **Executor**: A centralized executor who acts as the exclusive relayer specified in the intent
 3. **SolverAppGateway**: Runs the solver strategy, filling intents using vault liquidity.
-4. **RouterGateway**: Forwards intents to solver strategies.
+5. **RouterGateway**: Forwards intents to solver strategies.
 
 ## Project Structure
 
@@ -22,6 +23,8 @@ The system consists of:
 │   ├── SpokePoolWrapper.sol  - Wrapper for Across Protocol SpokePool
 │   ├── Vault.sol             - ERC4626 vault plug
 │   ├── SolverAppGateway.sol  - Gateway for cross chain communication and running solver strategy
+│   ├── Executor.sol          - Contract for executing intents from whitelisted vaults
+│   ├── RouterGateway.sol     - Router to forward intents to strategies
 │   ├── interfaces/           - Contract interfaces
 │   │   ├── IVault.sol
 │   │   └── across/
@@ -59,7 +62,13 @@ The system consists of:
 
 ## Deployment
 
-### 1. Deploy Solver App Gateways
+### 1. Deploy the Executor contract
+
+```bash
+forge script script/DeployExecutor.s.sol --broadcast --skip-simulation --via-ir
+```
+
+### 2. Deploy Solvers and Router
 
 ```bash
 forge script script/DeployGateways.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir --evm-version paris
@@ -98,7 +107,7 @@ source .env && cast send $ROUTER "deploySpokePoolWrapper(uint32)" 421614 --priva
 
 Get contract addresses:
 ```bash
-forge script script/GetOnChainAddress.s.sol --broadcast --skip-simulation --via-ir
+forge script script/GetDeployedAddressesAndSetVaultStatus.s.sol --broadcast --skip-simulation --via-ir
 ```
 Add to `.env`:
 ```env
@@ -109,9 +118,9 @@ AGGRESSIVE_VAULT=""
 
 ## Funding
 
-Approve WETH for vaults:
+Seed vaults with some ETH:
 ```bash
-forge script script/ApproveVaults.s.sol --broadcast --skip-simulation --via-ir
+forge script script/FundVaults.s.sol --broadcast --skip-simulation --via-ir
 ```
 Deposit ETH via the [vault_frontend](https://github.com/FredCoen/vault_frontend).
 

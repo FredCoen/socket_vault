@@ -12,6 +12,7 @@ import {RouterGateway} from "../src/RouterGateway.sol";
 contract DeployGateways is Script {
     function run() external {
         address addressResolver = vm.envAddress("ADDRESS_RESOLVER");
+        address executor = vm.envAddress("EXECUTOR");
         address spokePoolArbitrum = vm.envAddress("SPOKE_POOL_421614");
         address spokePoolOptimism = vm.envAddress("SPOKE_POOL_11155420");
 
@@ -21,6 +22,8 @@ contract DeployGateways is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
         uint256 maxFees = 10 ether;
+
+        console.log("Executor:", executor);
 
         RouterGateway router = new RouterGateway(
             addressResolver,
@@ -37,7 +40,8 @@ contract DeployGateways is Script {
             spokePoolOptimism,
             abi.encodePacked(type(WETHVault).creationCode),
             address(router),
-            2
+            2,
+            executor
         );
 
         SolverAppGateway conservativeSolver = new SolverAppGateway(
@@ -47,7 +51,8 @@ contract DeployGateways is Script {
             spokePoolOptimism,
             abi.encodePacked(type(WETHVault).creationCode),
             address(router),
-            30
+            30,
+            executor
         );
 
         router.addStrategy(agressiveSolver);
