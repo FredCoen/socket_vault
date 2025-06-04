@@ -1,10 +1,10 @@
 # Building a filler strategy/vault on SOCKET
 
-This tutorial demonstrates how to build an Intent Solver strategy on the Socket Protocol, using on-chain vault liquidity to fill cross-chain intents. **Not production-ready.**
+This tutorial demonstrates how to build an Intent Filler strategy on the Socket Protocol, using on-chain vault liquidity to fill cross-chain intents. **Not production-ready.**
 
 ## Overview
 
-This tutorial implements two solver strategies for filling intents to transfer ETH from Arbitrum Sepolia to Optimism Sepolia. The strategies differ in how quickly they pick up intents (aggressive vs. conservative reorg risk tolerance).
+This tutorial implements two filler strategies for filling intents to transfer ETH from Arbitrum Sepolia to Optimism Sepolia. The strategies differ in how quickly they pick up intents (aggressive vs. conservative reorg risk tolerance).
 
 ## System Components
 
@@ -19,13 +19,13 @@ Let's understand each component we'll build:
 2. **SpokePoolWrapper (SpokePoolWrapper.sol)**
    - Wraps Across Protocol's SpokePool in order to notify Socket about new intents
 
-3. **Solver Gateway (SolverAppGateway.sol)**
-   - Implements the solver strategy
+3. **FillerStrategy (FillerStrategy.sol)**
+   - Implements the filler strategy
    - Decides when to fill intents
    - Sends payloads to execute intents to connected on chain vault
 
 4. **Router Gateway (RouterGateway.sol)**
-   - Receives and forwards intents to relevant solver strategies
+   - Receives and forwards intents to relevant filler strategies
 
 5. **Executor (Executor.sol)**
    - Handles the actual execution of intents
@@ -66,7 +66,7 @@ cp .env.example .env
 - Interfaces with Across Protocol's SpokePool
 - Handles deposit and relay mechanics
 
-#### SolverAppGateway.sol
+#### FillerStrategy.sol
 - Implements two strategies:
   1. Conservative: Waits for more confirmations
   2. Aggressive: Fills intents quickly
@@ -80,7 +80,7 @@ Deploy contracts in this order:
 forge script script/DeployExecutor.s.sol --broadcast --skip-simulation --via-ir
 ```
 
-### 2. Deploy Solvers and Router
+### 2. Deploy Fillers and Router
 
 ```bash
 forge script script/DeployGateways.s.sol --broadcast --skip-simulation --legacy --with-gas-price 0 --via-ir --evm-version paris
@@ -88,8 +88,8 @@ forge script script/DeployGateways.s.sol --broadcast --skip-simulation --legacy 
 
 Add contract addresses to `.env`:
 ```env
-CONSERVATIVE_SOLVER=""
-AGGRESSIVE_SOLVER=""
+CONSERVATIVE_FILLER=""
+AGGRESSIVE_FILLER=""
 ROUTER=""
 ```
 
@@ -108,8 +108,8 @@ forge script script/CheckFeesBalance.s.sol --broadcast --skip-simulation --via-i
 
 **On Optimism Sepolia:**
 ```bash
-source .env && cast send $CONSERVATIVE_SOLVER "deployVault(uint32,address,string,string)" 11155420 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
-source .env && cast send $AGRESSIVE_SOLVER "deployVault(uint32,address,string,string)" 11155420 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
+source .env && cast send $CONSERVATIVE_FILLER "deployVault(uint32,address,string,string)" 11155420 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
+source .env && cast send $AGGRESSIVE_FILLER "deployVault(uint32,address,string,string)" 11155420 0x4200000000000000000000000000000000000006 'WETH Vault' 'vWETH' --private-key $PRIVATE_KEY --legacy --gas-price 0 --gas-limit 120000000 --rpc-url $EVMX_RPC
 ```
 
 **On Arbitrum Sepolia:**
@@ -148,7 +148,7 @@ Alternatively fire auction off an intent via the [vault_frontend](https://github
 ## How It Works
 
 1. **Intent Creation:** `deposit` on SpokePoolWrapper creates an intent.
-2. **Intent Detection:** RouterGateway forwards the intent to solvers.
-3. **Liquidity Provision:** Solvers call the vault to fill the intent.
+2. **Intent Detection:** RouterGateway forwards the intent to fillers.
+3. **Liquidity Provision:** FIllers call the vault to fill the intent.
 4. **Intent Execution:** Vault approves tokens and calls `fillRelay` via the Executor contract on Across SpokePool.
 5. **Completion:** Recipient receives funds; settlement returns funds to the vault.

@@ -5,10 +5,10 @@ import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
 import {SpokePoolWrapper} from "../src/SpokePoolWrapper.sol";
 import {WETHVault} from "../src/Vault.sol";
-import {SolverAppGateway} from "../src/SolverAppGateway.sol";
+import {FillerStrategy} from "../src/FillerStrategy.sol";
 import {RouterGateway} from "../src/RouterGateway.sol";
 
-// source .env && forge script script/DeploySolverAppGateway.s.sol --broadcast --skip-simulation --legacy --gas-price 0
+// source .env && forge script script/DeployFillerStrategy.s.sol --broadcast --skip-simulation --legacy --gas-price 0
 contract DeployGateways is Script {
     function run() external {
         address addressResolver = vm.envAddress("ADDRESS_RESOLVER");
@@ -33,7 +33,7 @@ contract DeployGateways is Script {
             maxFees
         );
 
-        SolverAppGateway agressiveSolver = new SolverAppGateway(
+        FillerStrategy agressiveFiller = new FillerStrategy(
             addressResolver,
             maxFees,
             spokePoolArbitrum,
@@ -44,7 +44,7 @@ contract DeployGateways is Script {
             executor
         );
 
-        SolverAppGateway conservativeSolver = new SolverAppGateway(
+        FillerStrategy conservativeFiller = new FillerStrategy(
             addressResolver,
             maxFees,
             spokePoolArbitrum,
@@ -55,16 +55,16 @@ contract DeployGateways is Script {
             executor
         );
 
-        router.addStrategy(agressiveSolver);
-        router.addStrategy(conservativeSolver);
+        router.addStrategy(agressiveFiller);
+        router.addStrategy(conservativeFiller);
 
-        console.log("ConservativeSolver contract:", address(conservativeSolver));
+        console.log("ConservativeFiller contract:", address(conservativeFiller));
         console.log(
-            "See ConservativeSolver on EVMx: https://evmx.cloud.blockscout.com/address/%s", address(conservativeSolver)
+            "See ConservativeFiller on EVMx: https://evmx.cloud.blockscout.com/address/%s", address(conservativeFiller)
         );
-        console.log("AgressiveSolver contract:", address(agressiveSolver));
+        console.log("AgressiveFiller contract:", address(agressiveFiller));
         console.log(
-            "See AgressiveSolver on EVMx: https://evmx.cloud.blockscout.com/address/%s", address(agressiveSolver)
+            "See AgressiveFiller on EVMx: https://evmx.cloud.blockscout.com/address/%s", address(agressiveFiller)
         );
         console.log("RouterGateway contract:", address(router));
         console.log("See RouterGateway on EVMx: https://evmx.cloud.blockscout.com/address/%s", address(router));

@@ -35,16 +35,16 @@ contract FundVaults is Script {
         IWETH weth = IWETH(assetAddress);
 
         // Mint 0.02 WETH by depositing ETH
-        weth.deposit{value: 0.2 ether}();
+        weth.deposit{value: 0.12 ether}();
 
         // Approve spending for both vaults
         weth.approve(conservativeVault, type(uint256).max);
         weth.approve(agressiveVault, type(uint256).max);
 
         // Deposit 0.02 WETH into conservative vault
-        // vaultConservative.deposit(0.15 ether, address(this));
+        vaultConservative.deposit(0.08 ether, address(this));
 
-        vaultAggressive.deposit(0.05 ether, address(this));
+        vaultAggressive.deposit(0.04 ether, address(this));
 
         vm.stopBroadcast();
     }

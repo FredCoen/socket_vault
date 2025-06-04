@@ -15,18 +15,18 @@ contract DepositFees is Script {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
         FeesPlug feesPlug = FeesPlug(payable(vm.envAddress("ARBITRUM_FEES_PLUG")));
-        address agressiveSolver = vm.envAddress("AGRESSIVE_SOLVER");
-        address conservativeSolver = vm.envAddress("CONSERVATIVE_SOLVER");
+        address agressiveFiller = vm.envAddress("AGGRESSIVE_FILLER");
+        address conservativeFiller = vm.envAddress("CONSERVATIVE_FILLER");
         address router = vm.envAddress("ROUTER");
         testUSDCContract.mint(vm.addr(privateKey), feesAmount * 3);
         testUSDCContract.approve(address(feesPlug), feesAmount * 3);
 
         address sender = vm.addr(privateKey);
-        feesPlug.depositToFeeAndNative(address(testUSDCContract), agressiveSolver, feesAmount);
-        feesPlug.depositToFeeAndNative(address(testUSDCContract), conservativeSolver, feesAmount);
+        feesPlug.depositToFeeAndNative(address(testUSDCContract), agressiveFiller, feesAmount);
+        feesPlug.depositToFeeAndNative(address(testUSDCContract), conservativeFiller, feesAmount);
         feesPlug.depositToFeeAndNative(address(testUSDCContract), router, feesAmount);
-        console.log("Added fee balance for Agressive Solver %s", feesAmount, agressiveSolver);
-        console.log("Added fee balance for Conservative Solver %s", feesAmount, conservativeSolver);
+        console.log("Added fee balance for Agressive Filler %s", feesAmount, agressiveFiller);
+        console.log("Added fee balance for Conservative Filler %s", feesAmount, conservativeFiller);
         console.log("Added fee balance for Router %s", feesAmount, router);
         vm.stopBroadcast();
     }

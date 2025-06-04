@@ -8,7 +8,7 @@ import {WETHVault} from "./Vault.sol";
 import {IVault} from "./interfaces/IVault.sol";
 import "./interfaces/IStrategy.sol";
 
-contract SolverAppGateway is IStrategy, AppGatewayBase {
+contract FillerStrategy is IStrategy, AppGatewayBase {
     address public immutable router;
     address public immutable executor;
     uint256 public fillDelayInSeconds;
@@ -86,7 +86,6 @@ contract SolverAppGateway is IStrategy, AppGatewayBase {
         if (
             uint32(uint256(params.destinationChainId)) == OPTIMISM_SEPOLIA_CHAIN_ID
                 && toAddressUnchecked(params.outputToken) == WETH_BASE && chainSlug_ == ARBITRUM_SEPOLIA_CHAIN_ID
-                && params.inputAmount < 0.15 ether
         ) {
             V3SpokePoolInterface.V3RelayData memory relayData = V3SpokePoolInterface.V3RelayData({
                 depositor: params.depositor,
